@@ -18,6 +18,18 @@ function App() {
     shakes: 3,
   });
 
+  const handleScoreUpdate = (newScore: number) => {
+    setGameState((prev) => {
+      // Drobna optymalizacja: nie aktualizuj stanu, jeśli punkty się nie zmieniły
+      if (prev.currentPointsOnBoard === newScore) return prev;
+      
+      return {
+        ...prev,
+        currentPointsOnBoard: newScore,
+      };
+    });
+  };
+
   const handleShake = (force: number) => {
     poolBoardRef.current?.shake(force);
     setGameState((prev) => ({
@@ -29,7 +41,9 @@ function App() {
   return (
     <div className="h-screen p-8 bg-gray-800 flex flex-col">
       <div className="mx-auto w-full h-[80vh]  ">
-        <PoolBoard ref={poolBoardRef} />
+        <PoolBoard 
+        ref={poolBoardRef} 
+        onScoreChange={handleScoreUpdate}/>
       </div>
       <div className="flex-1 w-full flex justify-between items-center ">
         <div>test</div>

@@ -32,9 +32,11 @@ interface PoolBoardProps {
   width?: number;
   height?: number;
   onShake?: () => void;
+  onScoreChange?: (score: number) => void;
 }
 
 export const PoolBoard = forwardRef<PoolBoardRef>((props, ref) => {
+  const { onScoreChange } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
@@ -276,8 +278,9 @@ export const PoolBoard = forwardRef<PoolBoardRef>((props, ref) => {
       scoreRef.current = currentScore;
       ballsRef.current = updatedBalls;
       if (scoreChanged) {
-        console.log(currentScore);
-        // setDisplayScore(currentScore);
+        if (onScoreChange) {
+          onScoreChange(currentScore);
+        }
       }
     };
 
