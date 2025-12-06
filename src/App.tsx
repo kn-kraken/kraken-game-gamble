@@ -58,6 +58,7 @@ function App() {
       totalPoints: 0,
       shakes: 3,
     }));
+
   };
 
   const handleEndGamge = () => {
@@ -65,8 +66,8 @@ function App() {
       phase: "start",
       ballCount: 6,
       round: 1,
-      currentPointsOnBoard: 100,
-      totalPoints: gameState.currentPointsOnBoard,
+      currentPointsOnBoard: 0,
+      totalPoints: gameState.currentPointsOnBoard + gameState.totalPoints,
       shakes: 3,
     });
     alert("Game Over!");

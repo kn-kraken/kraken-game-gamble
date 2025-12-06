@@ -177,7 +177,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       ballsRef.current = balls;
     }, [dimensions, ballCount]);
 
-    // Physics simulation
+    // simulation
     useEffect(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -205,6 +205,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
         if (result.scoreChanged && onScoreChange) {
           onScoreChange(result.totalScore);
         }
+        // drawing game
         
         // Clear canvas
         ctx.fillStyle = "#0A5F38";
@@ -265,18 +266,10 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       };
     }, [dimensions, bonusFields]);
 
-    const shakeBalls = (balls: Ball[], forceFactor: number = 1): Ball[] => {
-      return balls.map((ball) => ({
-        ...ball,
-        vx: ball.vx + (Math.random() - 0.5) * 20/ball.value * forceFactor,
-        vy: ball.vy + (Math.random() - 0.5) * 20/ball.value * forceFactor,
-      }));
-    };
-
     useImperativeHandle(ref, () => ({
       shake: (forceFactor: number = 1) => {
         if (!ballsMovingRef.current) {
-          ballsRef.current = shakeBalls(ballsRef.current, forceFactor);
+          ballsRef.current = applyShakeForce(ballsRef.current, forceFactor);
         }
       },
       areBallsMoving: () => ballsMovingRef.current,

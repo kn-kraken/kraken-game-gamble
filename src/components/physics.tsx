@@ -3,6 +3,7 @@ import { Ball, BonusField, Dimensions } from "./types";
 
 const FRICTION = 0.98;
 const RESTITUTION = 0.9;
+const SPEED = 100;
 
 export interface PhysicsResult {
   updatedBalls: Ball[];
@@ -146,7 +147,7 @@ export const calculatePhysicsFrame = (
 export const applyShakeForce = (balls: Ball[], forceFactor: number = 1): Ball[] => {
   return balls.map((ball) => ({
     ...ball,
-    vx: ball.vx + (Math.random() - 0.5) * (200 / ball.value) * forceFactor,
-    vy: ball.vy + (Math.random() - 0.5) * (200 / ball.value) * forceFactor,
+    vx: ball.vx + (Math.random() - 0.5) * (SPEED / ball.value) * forceFactor,
+    vy: ball.vy + (Math.random() - 0.5) * (SPEED / ball.value) * forceFactor,
   }));
 };
