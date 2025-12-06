@@ -1,5 +1,5 @@
 // physicsEngine.ts
-import { Ball, BonusField, Dimensions } from "./types";
+import { type Ball, type BonusField, type Dimensions } from "./types";
 
 const FRICTION = 0.98;
 const RESTITUTION = 0.9;

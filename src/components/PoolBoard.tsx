@@ -6,7 +6,7 @@ import {
   useImperativeHandle,
   useMemo,
 } from "react";
-import { Ball, BonusField } from "./types.tsx";
+import { type Ball, type BonusField } from "./types.tsx";
 import { calculatePhysicsFrame, applyShakeForce } from "./physics.tsx";
 
 // Przygotowana tekstura "3D Blue Orb" w formacie Data URI
