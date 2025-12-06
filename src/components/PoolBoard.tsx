@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 
 interface Ball {
   id: number;
@@ -17,17 +17,39 @@ interface PoolBoardProps {
 }
 
 interface BonusField {
-  x_top: number;
-  y_top: number;
-  x_bot: number;
-  y_bot: number;
+  x: number;
+  y: number;
+  radius: number;
+  multiplier: number;
 }
 
 export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
   const ballsRef = useRef<Ball[]>([]);
-  const bonusFields = useRef<BonusField[]>([]);
+  const scoreRef = useRef<number>(0);
+  const scoredBallsRef = useRef<Map<number, number>>(new Map());
+  const [displayScore, setDisplayScore] = useState(0);
+  const bonusFields = useMemo<BonusField[]>(() => [
+    {
+      x: 100,
+      y: 300,
+      radius: 50,
+      multiplier: 1,
+    },
+    {
+      x: 300,
+      y: 200,
+      radius: 75,
+      multiplier: 2,
+    },
+    {
+      x: 600,
+      y: 400,
+      radius: 25,
+      multiplier: 3,
+    },
+  ], [width, height]);
 
   // Initialize balls
   useEffect(() => {
@@ -96,44 +118,6 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
         vy: 0,
         radius: 15,
         color: "#8844FF",
-      },
-    ];
-    bonusFields.current = [
-      {
-        x_top: 0,
-        y_top: 0,
-        x_bot: width / 3,
-        y_bot: height / 3,
-      },
-      {
-        x_top: 0,
-        y_top: height / 3,
-        x_bot: width / 3,
-        y_bot: 2* height / 3,
-      },
-      {
-        x_top: 0,
-        y_top: 2 * height / 3,
-        x_bot: width / 3,
-        y_bot: height,
-      },
-      {
-        x_top: width / 3,
-        y_top: 0,
-        x_bot: 2 * width / 3,
-        y_bot: height / 2,
-      },
-      {
-        x_top: width / 3,
-        y_top: height / 2,
-        x_bot: 2 * width / 3,
-        y_bot: height,
-      },
-      {
-        x_top: 2* width / 3,
-        y_top: 0,
-        x_bot: width,
-        y_bot: height,
       },
     ];
   }, [width, height]);
@@ -221,7 +205,43 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
         }
       }
 
+      const currentScoredBalls = scoredBallsRef.current;
+      let currentScore = scoreRef.current;
+      let scoreChanged = false;
+
+      // Ball-in-field detection
+      updatedBalls.forEach((ball) => {
+        let isInsideAnyField = false;
+        bonusFields.forEach((field) => {
+          // const ball = updatedBalls[i]
+          const dx = field.x - ball.x;
+          const dy = field.y - ball.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const minDist = field.radius - 0.5 * ball.radius;
+
+          if (distance < minDist) {
+            isInsideAnyField = true;
+            if (!currentScoredBalls.has(ball.id)) {
+              const points = ball.id * field.multiplier;
+              currentScore += points;
+              currentScoredBalls.set(ball.id, points);
+              scoreChanged = true;
+            }
+          }
+        });
+        if (!isInsideAnyField && currentScoredBalls.has(ball.id)) {
+          const pointsToRemove = currentScoredBalls.get(ball.id) || 0;
+          currentScore -= pointsToRemove;
+          currentScoredBalls.delete(ball.id);
+          scoreChanged = true;
+        }
+      });
+      scoreRef.current = currentScore;
       ballsRef.current = updatedBalls;
+      if (scoreChanged) {
+        console.log(currentScore)
+        // setDisplayScore(currentScore);
+      }
     };
 
     const render = () => {
@@ -230,9 +250,14 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
       ctx.fillRect(0, 0, width, height);
 
       ctx.strokeStyle = '#05301B';
-      bonusFields.current.forEach((field) => {
+      bonusFields.forEach((field) => {
+        ctx.beginPath();
+        ctx.arc(field.x, field.y, field.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "0A5F38";
+        ctx.fill();
+        ctx.strokeStyle = "#333";
         ctx.lineWidth = 5;
-        ctx.strokeRect(field.x_top, field.y_top, field.x_bot-field.x_top, field.y_bot-field.y_top);
+        ctx.stroke();
       });
 
       // Draw border
