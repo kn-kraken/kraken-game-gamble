@@ -107,9 +107,9 @@ export const calculatePhysicsFrame = (
       const dx = field.x - ball.x;
       const dy = field.y - ball.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      const minDist = field.radius - 0.5 * ball.radius;
+      // const minDist = field.radius - 0.5 * ball.radius;
 
-      if (distance < minDist) {
+      if (distance < field.radius) {
         isInsideAnyField = true;
         // Używamy ID kuli jako klucza, żeby uniknąć błędów
         if (!newScoredBallsMap.has(ball.id)) {
@@ -146,7 +146,7 @@ export const calculatePhysicsFrame = (
 export const applyShakeForce = (balls: Ball[], forceFactor: number = 1): Ball[] => {
   return balls.map((ball) => ({
     ...ball,
-    vx: ball.vx + (Math.random() - 0.5) * (20 / ball.value) * forceFactor,
-    vy: ball.vy + (Math.random() - 0.5) * (20 / ball.value) * forceFactor,
+    vx: ball.vx + (Math.random() - 0.5) * (200 / ball.value) * forceFactor,
+    vy: ball.vy + (Math.random() - 0.5) * (200 / ball.value) * forceFactor,
   }));
 };

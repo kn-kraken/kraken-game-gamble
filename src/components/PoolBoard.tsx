@@ -52,42 +52,46 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
     }, []);
     const scoreRef = useRef<number>(0);
     const scoredBallsRef = useRef<Map<number, number>>(new Map());
+    const oneRadius = 100
+    const twoRadius = 75
+    const threeRadius = 60
+    const fourRadius = 45
     const bonusFields = useMemo<BonusField[]>(
       () => [
         {
           x: dimensions.width * 0.15,
           y: dimensions.height * 0.6,
-          radius: 70,
+          radius: oneRadius,
           multiplier: 1,
         },
         {
           x: dimensions.width * 0.6,
           y: dimensions.height * 0.45,
-          radius: 70,
+          radius: oneRadius,
           multiplier: 1,
         },
         {
           x: dimensions.width * 0.4,
           y: dimensions.height * 0.4,
-          radius: 40,
+          radius: threeRadius,
           multiplier: 3,
         },
         {
           x: dimensions.width * 0.75,
           y: dimensions.height * 0.8,
-          radius: 55,
+          radius: twoRadius,
           multiplier: 2,
         },
         {
           x: dimensions.width * 0.25,
           y: dimensions.height * 0.25,
-          radius: 55,
+          radius: twoRadius,
           multiplier: 2,
         },
         {
           x: dimensions.width * 0.8,
           y: dimensions.height * 0.15,
-          radius: 25,
+          radius: fourRadius,
           multiplier: 4,
         },
       ],
@@ -116,7 +120,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       ];
 
       const balls: Ball[] = [];
-      const ballRadius = 15;
+      const ballRadius = 35;
       const minDistance = ballRadius * 2.5; // Minimum distance between ball centers
 
       // Helper function to check if a position is valid (no overlap)
@@ -184,7 +188,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       const {width, height} = dimensions
     
       const render = () => {
-        // 1. Oblicz fizykę używając wydzielonego modułu
+        
         const result = calculatePhysicsFrame(
             ballsRef.current,
             dimensions,
@@ -193,7 +197,6 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
             scoredBallsRef.current
         );
 
-        // 2. Aktualizuj referencje
         ballsRef.current = result.updatedBalls;
         ballsMovingRef.current = result.areMoving;
         scoredBallsRef.current = result.activeScoredBalls;
@@ -202,6 +205,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
         if (result.scoreChanged && onScoreChange) {
           onScoreChange(result.totalScore);
         }
+        
         // Clear canvas
         ctx.fillStyle = "#0A5F38";
         ctx.fillRect(0, 0, width, height);
@@ -236,7 +240,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
 
           // Add shine effect
           ctx.beginPath();
-          ctx.arc(ball.x - 5, ball.y - 5, ball.radius / 3, 0, Math.PI * 2);
+          ctx.arc(ball.x - 10, ball.y - 10, ball.radius / 3, 0, Math.PI * 2);
           ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
           ctx.fill();
 
