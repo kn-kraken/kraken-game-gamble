@@ -15,6 +15,7 @@ interface Ball {
   vy: number;
   radius: number;
   color: string;
+  value: number;
 }
 
 interface BonusField {
@@ -67,26 +68,43 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
     }, []);
     const scoreRef = useRef<number>(0);
     const scoredBallsRef = useRef<Map<number, number>>(new Map());
-    const [displayScore, setDisplayScore] = useState(0);
     const bonusFields = useMemo<BonusField[]>(
       () => [
         {
           x: dimensions.width * 0.15,
           y: dimensions.height * 0.6,
-          radius: 50,
+          radius: 70,
+          multiplier: 1,
+        },
+        {
+          x: dimensions.width * 0.6,
+          y: dimensions.height * 0.45,
+          radius: 70,
           multiplier: 1,
         },
         {
           x: dimensions.width * 0.4,
           y: dimensions.height * 0.4,
-          radius: 75,
-          multiplier: 2,
+          radius: 40,
+          multiplier: 3,
         },
         {
           x: dimensions.width * 0.75,
           y: dimensions.height * 0.8,
+          radius: 55,
+          multiplier: 2,
+        },
+        {
+          x: dimensions.width * 0.25,
+          y: dimensions.height * 0.25,
+          radius: 55,
+          multiplier: 2,
+        },
+        {
+          x: dimensions.width * 0.8,
+          y: dimensions.height * 0.15,
           radius: 25,
-          multiplier: 3,
+          multiplier: 4,
         },
       ],
       [dimensions.width, dimensions.height]
@@ -145,6 +163,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       for (let ballId = 0; ballId <= ballCount; ballId++) {
         let attempts = 0;
         let x: number, y: number;
+        let value = Math.floor(Math.random() * 6) + 1
 
         // Try to find a valid position (max 1000 attempts)
         do {
@@ -163,6 +182,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           radius: ballRadius,
           color:
             ballId === 0 ? "#FFFFFF" : colors[(ballId - 1) % colors.length],
+          value: value!,
         });
       }
 
@@ -269,10 +289,10 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
 
             if (distance < minDist) {
               isInsideAnyField = true;
-              if (!currentScoredBalls.has(ball.id)) {
-                const points = ball.id * field.multiplier;
+              if (!currentScoredBalls.has(ball.value)) {
+                const points = ball.value * field.multiplier;
                 currentScore += points;
-                currentScoredBalls.set(ball.id, points);
+                currentScoredBalls.set(ball.value, points);
                 scoreChanged = true;
               }
             }
@@ -337,6 +357,13 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           ctx.arc(ball.x - 5, ball.y - 5, ball.radius / 3, 0, Math.PI * 2);
           ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
           ctx.fill();
+
+          //Add ball value text
+          ctx.fillStyle = "#000000";
+          ctx.font = "bold 12px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(ball.value, ball.x, ball.y);
         });
 
         updatePhysics();
@@ -355,8 +382,8 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
     const shakeBalls = (balls: Ball[], forceFactor: number = 1): Ball[] => {
       return balls.map((ball) => ({
         ...ball,
-        vx: ball.vx + (Math.random() - 0.5) * 20 * forceFactor,
-        vy: ball.vy + (Math.random() - 0.5) * 20 * forceFactor,
+        vx: ball.vx + (Math.random() - 0.5) * 20/ball.value * forceFactor,
+        vy: ball.vy + (Math.random() - 0.5) * 20/ball.value * forceFactor,
       }));
     };
 
