@@ -226,47 +226,13 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
     }));
   };
 
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-
-    // Find cue ball (id: 0)
-    const cueBall = ballsRef.current.find((ball) => ball.id === 0);
-    if (!cueBall) return;
-
-    // Calculate direction from cue ball to click
-    const dx = clickX - cueBall.x;
-    const dy = clickY - cueBall.y;
-    const distance = Math.sqrt(dx * dx + dy * dy);
-
-    // Apply impulse to cue ball
-    const power = Math.min(distance / 20, 15);
-    const updatedBalls = ballsRef.current.map((ball) => {
-      if (ball.id === 0) {
-        return {
-          ...ball,
-          vx: (dx / distance) * power,
-          vy: (dy / distance) * power,
-        };
-      }
-      return ball;
-    });
-
-    ballsRef.current = updatedBalls;
-  };
-
   return (
     <div className="flex flex-col items-center gap-4">
       <canvas
         ref={canvasRef}
         width={width}
         height={height}
-        onClick={handleCanvasClick}
-        className="border-4 border-amber-900 shadow-2xl cursor-crosshair"
+        className="border-4 border-amber-900 shadow-2xl"
       />
       <button
         onClick={handleShake}
@@ -274,9 +240,6 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
       >
         Shake Table
       </button>
-      <p className="text-sm text-gray-600">
-        Click anywhere on the table to hit the cue ball
-      </p>
     </div>
   );
 };
