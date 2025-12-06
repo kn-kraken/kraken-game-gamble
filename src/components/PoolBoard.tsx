@@ -16,10 +16,18 @@ interface PoolBoardProps {
   onShake?: () => void;
 }
 
+interface BonusField {
+  x_top: number;
+  y_top: number;
+  x_bot: number;
+  y_bot: number;
+}
+
 export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
   const ballsRef = useRef<Ball[]>([]);
+  const bonusFields = useRef<BonusField[]>([]);
 
   // Initialize balls
   useEffect(() => {
@@ -88,6 +96,44 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
         vy: 0,
         radius: 15,
         color: "#8844FF",
+      },
+    ];
+    bonusFields.current = [
+      {
+        x_top: 0,
+        y_top: 0,
+        x_bot: width / 3,
+        y_bot: height / 3,
+      },
+      {
+        x_top: 0,
+        y_top: height / 3,
+        x_bot: width / 3,
+        y_bot: 2* height / 3,
+      },
+      {
+        x_top: 0,
+        y_top: 2 * height / 3,
+        x_bot: width / 3,
+        y_bot: height,
+      },
+      {
+        x_top: width / 3,
+        y_top: 0,
+        x_bot: 2 * width / 3,
+        y_bot: height / 2,
+      },
+      {
+        x_top: width / 3,
+        y_top: height / 2,
+        x_bot: 2 * width / 3,
+        y_bot: height,
+      },
+      {
+        x_top: 2* width / 3,
+        y_top: 0,
+        x_bot: width,
+        y_bot: height,
       },
     ];
   }, [width, height]);
@@ -182,6 +228,12 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
       // Clear canvas
       ctx.fillStyle = "#0A5F38";
       ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = '#05301B';
+      bonusFields.current.forEach((field) => {
+        ctx.lineWidth = 5;
+        ctx.strokeRect(field.x_top, field.y_top, field.x_bot-field.x_top, field.y_bot-field.y_top);
+      });
 
       // Draw border
       ctx.strokeStyle = "#8B4513";
