@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, useMemo } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+} from "react";
 
 interface Ball {
   id: number;
@@ -10,12 +17,6 @@ interface Ball {
   color: string;
 }
 
-interface PoolBoardProps {
-  width?: number;
-  height?: number;
-  onShake?: () => void;
-}
-
 interface BonusField {
   x: number;
   y: number;
@@ -23,36 +24,71 @@ interface BonusField {
   multiplier: number;
 }
 
-export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
+interface PoolBoardRef {
+  shake: (forceFactor?: number) => void;
+}
+
+interface PoolBoardProps {
+  width?: number;
+  height?: number;
+  onShake?: () => void;
+}
+
+export const PoolBoard = forwardRef<PoolBoardRef>((props, ref) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameRef = useRef<number | undefined>(undefined);
   const ballsRef = useRef<Ball[]>([]);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
+
+  // Handle container resize
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setDimensions({ width, height });
+      }
+    });
+
+    resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
   const scoreRef = useRef<number>(0);
   const scoredBallsRef = useRef<Map<number, number>>(new Map());
   const [displayScore, setDisplayScore] = useState(0);
-  const bonusFields = useMemo<BonusField[]>(() => [
-    {
-      x: 100,
-      y: 300,
-      radius: 50,
-      multiplier: 1,
-    },
-    {
-      x: 300,
-      y: 200,
-      radius: 75,
-      multiplier: 2,
-    },
-    {
-      x: 600,
-      y: 400,
-      radius: 25,
-      multiplier: 3,
-    },
-  ], [width, height]);
+  const bonusFields = useMemo<BonusField[]>(
+    () => [
+      {
+        x: dimensions.width * 0.15,
+        y: dimensions.height * 0.6,
+        radius: 50,
+        multiplier: 1,
+      },
+      {
+        x: dimensions.width * 0.4,
+        y: dimensions.height * 0.4,
+        radius: 75,
+        multiplier: 2,
+      },
+      {
+        x: dimensions.width * 0.75,
+        y: dimensions.height * 0.8,
+        radius: 25,
+        multiplier: 3,
+      },
+    ],
+    [dimensions.width, dimensions.height]
+  );
 
   // Initialize balls
   useEffect(() => {
+    const { width, height } = dimensions;
     ballsRef.current = [
       // Cue ball (white)
       {
@@ -120,7 +156,7 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
         color: "#8844FF",
       },
     ];
-  }, [width, height]);
+  }, [dimensions]);
 
   // Physics simulation
   useEffect(() => {
@@ -130,6 +166,7 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const { width, height } = dimensions;
     const friction = 0.98;
     const restitution = 0.9;
 
@@ -239,7 +276,7 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
       scoreRef.current = currentScore;
       ballsRef.current = updatedBalls;
       if (scoreChanged) {
-        console.log(currentScore)
+        console.log(currentScore);
         // setDisplayScore(currentScore);
       }
     };
@@ -249,21 +286,28 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
       ctx.fillStyle = "#0A5F38";
       ctx.fillRect(0, 0, width, height);
 
-      ctx.strokeStyle = '#05301B';
-      bonusFields.forEach((field) => {
-        ctx.beginPath();
-        ctx.arc(field.x, field.y, field.radius, 0, Math.PI * 2);
-        ctx.fillStyle = "0A5F38";
-        ctx.fill();
-        ctx.strokeStyle = "#333";
-        ctx.lineWidth = 5;
-        ctx.stroke();
-      });
-
       // Draw border
       ctx.strokeStyle = "#8B4513";
       ctx.lineWidth = 20;
       ctx.strokeRect(0, 0, width, height);
+
+      // Draw bonus fields
+      bonusFields.forEach((field) => {
+        ctx.beginPath();
+        ctx.arc(field.x, field.y, field.radius, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(255, 215, 0, 0.3)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 215, 0, 0.6)";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Draw multiplier text
+        ctx.fillStyle = "#FFD700";
+        ctx.font = "bold 24px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(`x${field.multiplier}`, field.x, field.y);
+      });
 
       // Draw balls
       ballsRef.current.forEach((ball) => {
@@ -293,30 +337,32 @@ export const PoolBoard = ({ width = 800, height = 500 }: PoolBoardProps) => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [width, height]);
+  }, [dimensions, bonusFields]);
 
-  const handleShake = () => {
-    ballsRef.current = ballsRef.current.map((ball) => ({
+  const shakeBalls = (balls: Ball[], forceFactor: number = 1): Ball[] => {
+    return balls.map((ball) => ({
       ...ball,
-      vx: (Math.random() - 0.5) * 20,
-      vy: (Math.random() - 0.5) * 20,
+      vx: ball.vx + (Math.random() - 0.5) * 20 * forceFactor,
+      vy: ball.vy + (Math.random() - 0.5) * 20 * forceFactor,
     }));
   };
 
+  useImperativeHandle(ref, () => ({
+    shake: (forceFactor: number = 1) => {
+      ballsRef.current = shakeBalls(ballsRef.current, forceFactor);
+    },
+  }));
+
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div ref={containerRef} className="w-full h-full">
       <canvas
         ref={canvasRef}
-        width={width}
-        height={height}
-        className="border-4 border-amber-900 shadow-2xl"
+        width={dimensions.width}
+        height={dimensions.height}
+        className="shadow-2xl w-full h-full"
       />
-      <button
-        onClick={handleShake}
-        className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-colors"
-      >
-        Shake Table
-      </button>
     </div>
   );
-};
+});
+
+PoolBoard.displayName = "PoolBoard";
