@@ -21,7 +21,15 @@ export const calculatePhysicsFrame = (
   scoredBallsMap: Map<number, number>
 ): PhysicsResult => {
   const { width, height } = dimensions;
-  
+
+  // Define playing field boundaries (white rectangle)
+  const PADDING = 30; // Padding from canvas edges
+  const BOTTOM_PADDING = 100; // Extra padding at the bottom
+  const fieldLeft = PADDING;
+  const fieldRight = width - PADDING;
+  const fieldTop = PADDING;
+  const fieldBottom = height - BOTTOM_PADDING;
+
   // 1. Kopiujemy tablicę, aby nie mutować propsów bezpośrednio (dobre praktyki)
   // W grach dla wydajności czasem mutuje się obiekty, tutaj robimy shallow copy
   const updatedBalls = balls.map((ball) => ({ ...ball }));
@@ -36,15 +44,21 @@ export const calculatePhysicsFrame = (
     ball.x += ball.vx;
     ball.y += ball.vy;
 
-    // Ściany (X)
-    if (ball.x - ball.radius < 0 || ball.x + ball.radius > width) {
+    // Ściany (X) - constrained to playing field
+    if (ball.x - ball.radius < fieldLeft || ball.x + ball.radius > fieldRight) {
       ball.vx = -ball.vx * RESTITUTION;
-      ball.x = ball.x - ball.radius < 0 ? ball.radius : width - ball.radius;
+      ball.x =
+        ball.x - ball.radius < fieldLeft
+          ? fieldLeft + ball.radius
+          : fieldRight - ball.radius;
     }
-    // Ściany (Y)
-    if (ball.y - ball.radius < 0 || ball.y + ball.radius > height) {
+    // Ściany (Y) - constrained to playing field
+    if (ball.y - ball.radius < fieldTop || ball.y + ball.radius > fieldBottom) {
       ball.vy = -ball.vy * RESTITUTION;
-      ball.y = ball.y - ball.radius < 0 ? ball.radius : height - ball.radius;
+      ball.y =
+        ball.y - ball.radius < fieldTop
+          ? fieldTop + ball.radius
+          : fieldBottom - ball.radius;
     }
 
     // Stop bardzo wolnych kulek
@@ -97,7 +111,7 @@ export const calculatePhysicsFrame = (
   // 4. Logika punktacji
   let newScore = currentScore;
   let hasScoreChanged = false;
-  
+
   // Klonujemy mapę, aby nie mutować referencji z Reacta
   const newScoredBallsMap = new Map(scoredBallsMap);
 
@@ -108,9 +122,9 @@ export const calculatePhysicsFrame = (
       const dx = field.x - ball.x;
       const dy = field.y - ball.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
-      // const minDist = field.radius - 0.5 * ball.radius;
 
-      if (distance < field.radius) {
+      // Ball must be fully inside the field (same logic as rendering)
+      if (distance + ball.radius <= field.radius) {
         isInsideAnyField = true;
         // Używamy ID kuli jako klucza, żeby uniknąć błędów
         if (!newScoredBallsMap.has(ball.id)) {
@@ -140,11 +154,14 @@ export const calculatePhysicsFrame = (
     totalScore: newScore,
     scoreChanged: hasScoreChanged,
     activeScoredBalls: newScoredBallsMap,
-    areMoving
+    areMoving,
   };
 };
 
-export const applyShakeForce = (balls: Ball[], forceFactor: number = 1): Ball[] => {
+export const applyShakeForce = (
+  balls: Ball[],
+  forceFactor: number = 1
+): Ball[] => {
   return balls.map((ball) => ({
     ...ball,
     vx: ball.vx + (Math.random() - 0.5) * (SPEED / ball.value) * forceFactor,

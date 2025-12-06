@@ -6,13 +6,13 @@ import {
   useImperativeHandle,
   useMemo,
 } from "react";
-import {Ball, BonusField} from "./types.tsx"
+import { Ball, BonusField } from "./types.tsx";
 import { calculatePhysicsFrame, applyShakeForce } from "./physics.tsx";
 
 // Przygotowana tekstura "3D Blue Orb" w formacie Data URI
 const ballImg = new Image();
-ballImg.src = "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22grad%22%20cx%3D%2230%25%22%20cy%3D%2230%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22%2F%3E%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%234facfe%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2300f2fe%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22url(%23grad)%22%2F%3E%3C%2Fsvg%3E";
-
+ballImg.src =
+  "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22grad%22%20cx%3D%2230%25%22%20cy%3D%2230%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22%2F%3E%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%234facfe%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2300f2fe%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22url(%23grad)%22%2F%3E%3C%2Fsvg%3E";
 
 export interface PoolBoardRef {
   shake: (forceFactor?: number) => void;
@@ -25,11 +25,18 @@ export interface PoolBoardProps {
   onShake?: () => void;
   onScoreChange?: (score: number) => void;
   ballCount?: number;
+  ballNumbers?: number[];
+  onBallsInFieldChange?: (ballIds: number[]) => void;
 }
 
 export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
   (props, ref) => {
-    const { onScoreChange, ballCount = 6 } = props;
+    const {
+      onScoreChange,
+      ballCount = 6,
+      ballNumbers = [],
+      onBallsInFieldChange,
+    } = props;
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationFrameRef = useRef<number | undefined>(undefined);
@@ -57,10 +64,10 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
     }, []);
     const scoreRef = useRef<number>(0);
     const scoredBallsRef = useRef<Map<number, number>>(new Map());
-    const oneRadius = 100
-    const twoRadius = 75
-    const threeRadius = 60
-    const fourRadius = 45
+    const oneRadius = 100;
+    const twoRadius = 75;
+    const threeRadius = 60;
+    const fourRadius = 45;
     const bonusFields = useMemo<BonusField[]>(
       () => [
         {
@@ -129,13 +136,15 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       const minDistance = ballRadius * 2.5; // Minimum distance between ball centers
 
       // Helper function to check if a position is valid (no overlap)
+      const PADDING = 30;
+      const BOTTOM_PADDING = 100;
       const isValidPosition = (x: number, y: number, existingBalls: Ball[]) => {
-        // Check bounds
+        // Check bounds - constrain to playing field
         if (
-          x - ballRadius < 0 ||
-          x + ballRadius > width ||
-          y - ballRadius < 0 ||
-          y + ballRadius > height
+          x - ballRadius < PADDING ||
+          x + ballRadius > width - PADDING ||
+          y - ballRadius < PADDING ||
+          y + ballRadius > height - BOTTOM_PADDING
         ) {
           return false;
         }
@@ -153,15 +162,21 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       };
 
       // Generate random positions for all balls
-      for (let ballId = 0; ballId <= ballCount; ballId++) {
+      for (let ballId = 0; ballId < ballCount; ballId++) {
         let attempts = 0;
         let x: number, y: number;
-        let value = Math.floor(Math.random() * 6) + 1
+        const value = ballNumbers[ballId] || Math.floor(Math.random() * 49) + 1;
 
         // Try to find a valid position (max 1000 attempts)
         do {
-          x = ballRadius + Math.random() * (width - 2 * ballRadius);
-          y = ballRadius + Math.random() * (height - 2 * ballRadius);
+          x =
+            PADDING +
+            ballRadius +
+            Math.random() * (width - 2 * PADDING - 2 * ballRadius);
+          y =
+            PADDING +
+            ballRadius +
+            Math.random() * (height - 2 * PADDING - 2 * ballRadius);
           attempts++;
         } while (!isValidPosition(x, y, balls) && attempts < 1000);
 
@@ -173,14 +188,13 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           vx: 0,
           vy: 0,
           radius: ballRadius,
-          color:
-            ballId === 0 ? "#FFFFFF" : colors[(ballId - 1) % colors.length],
-          value: value!,
+          color: colors[ballId % colors.length],
+          value: value,
         });
       }
 
       ballsRef.current = balls;
-    }, [dimensions, ballCount]);
+    }, [dimensions, ballCount, ballNumbers]);
 
     // simulation
     useEffect(() => {
@@ -190,16 +204,15 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const {width, height} = dimensions
-    
+      const { width, height } = dimensions;
+
       const render = () => {
-        
         const result = calculatePhysicsFrame(
-            ballsRef.current,
-            dimensions,
-            bonusFields,
-            scoreRef.current,
-            scoredBallsRef.current
+          ballsRef.current,
+          dimensions,
+          bonusFields,
+          scoreRef.current,
+          scoredBallsRef.current
         );
 
         ballsRef.current = result.updatedBalls;
@@ -211,10 +224,23 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           onScoreChange(result.totalScore);
         }
         // drawing game
-        
+
         // Clear canvas
         ctx.fillStyle = "#0A5F38";
         ctx.fillRect(0, 0, width, height);
+
+        // Draw playing field boundary (white rectangle)
+        const PADDING = 30;
+        const BOTTOM_PADDING = 100;
+
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(
+          PADDING,
+          PADDING,
+          width - 2 * PADDING,
+          height - PADDING - BOTTOM_PADDING
+        );
 
         // Draw bonus fields
         bonusFields.forEach((field) => {
@@ -235,13 +261,26 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
         });
 
         // Draw balls
+        const ballsInFields: number[] = [];
         ballsRef.current.forEach((ball) => {
+          // Check if ball is in any bonus field
+          for (const field of bonusFields) {
+            const dx = ball.x - field.x;
+            const dy = ball.y - field.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance + ball.radius <= field.radius) {
+              ballsInFields.push(ball.id);
+              break;
+            }
+          }
+
+          // Draw ball (no visual changes on board)
           ctx.drawImage(
-            ballImg, 
+            ballImg,
             ball.x - ball.radius, // Pozycja X (przesunięta o promień w lewo)
             ball.y - ball.radius, // Pozycja Y (przesunięta o promień w górę)
-            ball.radius * 2,      // Szerokość (średnica)
-            ball.radius * 2       // Wysokość (średnica)
+            ball.radius * 2, // Szerokość (średnica)
+            ball.radius * 2 // Wysokość (średnica)
           );
           // ctx.beginPath();
           // ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
@@ -262,8 +301,13 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           ctx.font = "bold 12px Arial";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(ball.value, ball.x, ball.y);
+          ctx.fillText(ball.value.toString(), ball.x, ball.y);
         });
+
+        // Notify parent about balls in fields
+        if (onBallsInFieldChange) {
+          onBallsInFieldChange(ballsInFields);
+        }
 
         // updatePhysics();
         animationFrameRef.current = requestAnimationFrame(render);

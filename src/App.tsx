@@ -7,29 +7,39 @@ type GamePhase = "start" | "play";
 
 interface GameState {
   phase: GamePhase;
-  ballCount: number;
+  ballNumbers: number[];
   round: number;
   currentPointsOnBoard: number;
   totalPoints: number;
   shakes: number;
 }
 
+// Generate random ball numbers between 1-49
+const generateBallNumbers = (count: number): number[] => {
+  return Array.from(
+    { length: Math.min(count, 20) },
+    () => Math.floor(Math.random() * 49) + 1
+  );
+};
+
 function App() {
   const poolBoardRef = useRef<PoolBoardRef>(null);
   const [gameState, setGameState] = useState<GameState>({
     phase: "start",
-    ballCount: 6,
+    ballNumbers: generateBallNumbers(20),
     round: 1,
     currentPointsOnBoard: 0,
     totalPoints: 0,
     shakes: 3,
   });
 
+  const [ballsInFields, setBallsInFields] = useState<number[]>([]);
+
   const handleScoreUpdate = (newScore: number) => {
     setGameState((prev) => {
       // Drobna optymalizacja: nie aktualizuj stanu, jeśli punkty się nie zmieniły
       if (prev.currentPointsOnBoard === newScore) return prev;
-      
+
       return {
         ...prev,
         currentPointsOnBoard: newScore,
@@ -53,18 +63,18 @@ function App() {
     setGameState((prev) => ({
       ...prev,
       phase: "play",
+      ballNumbers: generateBallNumbers(prev.ballNumbers.length),
       round: 1,
       currentPointsOnBoard: 0,
       totalPoints: 0,
       shakes: 3,
     }));
-
   };
 
   const handleEndGamge = () => {
     setGameState({
       phase: "start",
-      ballCount: 6,
+      ballNumbers: generateBallNumbers(6),
       round: 1,
       currentPointsOnBoard: 0,
       totalPoints: gameState.currentPointsOnBoard + gameState.totalPoints,
@@ -82,67 +92,85 @@ function App() {
   };
 
   const handleBallCountChange = (count: number) => {
+    const limitedCount = Math.min(count, 20);
     setGameState((prev) => ({
       ...prev,
-      ballCount: count,
+      ballNumbers: generateBallNumbers(limitedCount),
     }));
   };
 
   return (
-    <div className="flex h-screen bg-gray-800 overflow-hidden">
-      <aside className="w-64 h-full bg-gray-900 border-r border-gray-700 text-white p-4 flex flex-col shrink-0">
-        <h2 className="text-xl font-bold mb-4">Menu</h2>
-        {/* Przykładowa zawartość paska bocznego */}
-        <div className="space-y-2 text-gray-400">
-          <div className="p-2 hover:bg-gray-800 rounded cursor-pointer">Opcje gry</div>
-          <div className="p-2 hover:bg-gray-800 rounded cursor-pointer">Statystyki</div>
-          <div className="p-2 hover:bg-gray-800 rounded cursor-pointer">Ustawienia</div>
-        </div>
-      </aside>
+    <div className="h-screen bg-bg flex gap-8">
+      <div className="w-1/4 flex flex-col justify-center items-start gap-8 p-4">
+        <div>test</div>
 
-      <main className="flex-1 flex flex-col h-full relative">
-        
-        <div className="flex-1 w-full p-4 flex flex-col justify-center items-center min-h-0">
-          <div className="aspect-[12/9] max-h-full w-full max-w-7xl mx-auto bg-black/20 relative shadow-2xl">
-            <PoolBoard 
-              ref={poolBoardRef} 
-              ballCount={gameState.ballCount} 
-              onScoreChange={handleScoreUpdate}
-            />
+        <div className="text-white space-y-2">
+          <div className="text-xl">
+            <span className="font-bold">Round:</span> {gameState.round}
+          </div>
+          <div className="text-xl">
+            <span className="font-bold">Points on Board:</span>{" "}
+            {gameState.currentPointsOnBoard}
+          </div>
+          <div className="text-xl">
+            <span className="font-bold">Total Points:</span>{" "}
+            {gameState.totalPoints}
           </div>
         </div>
-        <div className="w-full bg-gray-900/80 p-6 flex justify-between items-center border-t border-gray-700 shrink-0 z-10">
-          <div className="text-gray-400">test</div>
 
-          <div className="text-white space-y-1">
-            <div className="text-lg">
-              <span className="font-bold text-gray-400">Round:</span> {gameState.round}
-            </div>
-            <div className="text-lg">
-              <span className="font-bold text-gray-400">Points on Board:</span>{" "}
-              {gameState.currentPointsOnBoard}
-            </div>
-            <div className="text-lg">
-              <span className="font-bold text-gray-400">Total Points:</span>{" "}
-              {gameState.totalPoints}
-            </div>
-          </div>
+        <div className="flex gap-4">
+          <ForceBtn
+            onShake={handleShake}
+            disabled={gameState.shakes < 1 || ballsMoving}
+            shakesRemaining={gameState.shakes}
+          />
+          <button
+            onClick={handleEndGamge}
+            className="w-16 h-16 bg-blue-600 text-white grid place-items-center hover:cursor-pointer"
+          >
+            <Check className="w-8 h-8" />
+          </button>
+        </div>
+      </div>
+      <div className="w-3/4 h-full flex flex-col">
+        <div className="flex-1">
+          <PoolBoard
+            ref={poolBoardRef}
+            ballCount={gameState.ballNumbers.length}
+            ballNumbers={gameState.ballNumbers}
+            onScoreChange={handleScoreUpdate}
+            onBallsInFieldChange={setBallsInFields}
+          />
+        </div>
 
-          <div className="flex gap-4">
-            <ForceBtn
-              onShake={handleShake}
-              disabled={gameState.shakes < 1 || ballsMoving}
-              shakesRemaining={gameState.shakes}
-            />
-            <button
-              onClick={handleEndGamge}
-              className="w-16 h-16 bg-blue-600 text-white grid place-items-center hover:bg-blue-500 transition-colors rounded shadow-lg"
-            >
-              <Check className="w-8 h-8" />
-            </button>
+        {/* Bottom ball display */}
+        <div className="bg-bg p-4  fixed bottom-2 rounded-r-full">
+          <div className="flex items-center justify-center gap-1 flex-wrap">
+            {gameState.ballNumbers.map((num, index) => {
+              const isInField = ballsInFields.includes(index);
+              return (
+                <div
+                  key={index}
+                  className="w-12 h-12 rounded-full bg-[#FFD700] flex items-center justify-center shadow-lg relative transition-all duration-200"
+                  style={{
+                    boxShadow: isInField
+                      ? "0 8px 12px rgba(255,215,0,0.6), 0 4px 6px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)"
+                      : "0 4px 6px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)",
+                    transform: isInField
+                      ? "translateY(-8px) scale(1.1)"
+                      : "translateY(0) scale(1)",
+                  }}
+                >
+                  <span className="text-black font-bold text-sm z-10">
+                    {num}
+                  </span>
+                  <div className="absolute top-1 left-2 w-3 h-3 rounded-full bg-white opacity-60" />
+                </div>
+              );
+            })}
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
