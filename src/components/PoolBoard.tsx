@@ -6,24 +6,8 @@ import {
   useImperativeHandle,
   useMemo,
 } from "react";
-
-interface Ball {
-  id: number;
-  x: number;
-  y: number;
-  vx: number;
-  vy: number;
-  radius: number;
-  color: string;
-  value: number;
-}
-
-interface BonusField {
-  x: number;
-  y: number;
-  radius: number;
-  multiplier: number;
-}
+import {Ball, BonusField} from "./types.tsx"
+import { calculatePhysicsFrame, applyShakeForce } from "./physics.tsx";
 
 export interface PoolBoardRef {
   shake: (forceFactor?: number) => void;
@@ -197,129 +181,27 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
 
-      const { width, height } = dimensions;
-      const friction = 0.98;
-      const restitution = 0.9;
-
-      const updatePhysics = () => {
-        const updatedBalls = ballsRef.current.map((ball) => {
-          let { x, y, vx, vy } = ball;
-
-          // Apply friction
-          vx *= friction;
-          vy *= friction;
-
-          // Update position
-          x += vx;
-          y += vy;
-
-          // Wall collisions
-          if (x - ball.radius < 0 || x + ball.radius > width) {
-            vx = -vx * restitution;
-            x = x - ball.radius < 0 ? ball.radius : width - ball.radius;
-          }
-          if (y - ball.radius < 0 || y + ball.radius > height) {
-            vy = -vy * restitution;
-            y = y - ball.radius < 0 ? ball.radius : height - ball.radius;
-          }
-
-          // Stop very slow movement
-          if (Math.abs(vx) < 0.1) vx = 0;
-          if (Math.abs(vy) < 0.1) vy = 0;
-
-          return { ...ball, x, y, vx, vy };
-        });
-
-        // Ball-to-ball collisions
-        for (let i = 0; i < updatedBalls.length; i++) {
-          for (let j = i + 1; j < updatedBalls.length; j++) {
-            const ball1 = updatedBalls[i];
-            const ball2 = updatedBalls[j];
-
-            const dx = ball2.x - ball1.x;
-            const dy = ball2.y - ball1.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const minDist = ball1.radius + ball2.radius;
-
-            if (distance < minDist) {
-              // Collision detected
-              const angle = Math.atan2(dy, dx);
-              const sin = Math.sin(angle);
-              const cos = Math.cos(angle);
-
-              // Rotate velocities
-              const vx1 = ball1.vx * cos + ball1.vy * sin;
-              const vy1 = ball1.vy * cos - ball1.vx * sin;
-              const vx2 = ball2.vx * cos + ball2.vy * sin;
-              const vy2 = ball2.vy * cos - ball2.vx * sin;
-
-              // Swap velocities (elastic collision)
-              const tempVx = vx1;
-              ball1.vx = (vx2 * cos - vy1 * sin) * restitution;
-              ball1.vy = (vy1 * cos + vx2 * sin) * restitution;
-              ball2.vx = (tempVx * cos - vy2 * sin) * restitution;
-              ball2.vy = (vy2 * cos + tempVx * sin) * restitution;
-
-              // Separate balls
-              const overlap = minDist - distance;
-              const separateX = ((dx / distance) * overlap) / 2;
-              const separateY = ((dy / distance) * overlap) / 2;
-
-              ball1.x -= separateX;
-              ball1.y -= separateY;
-              ball2.x += separateX;
-              ball2.y += separateY;
-            }
-          }
-        }
-
-        const currentScoredBalls = scoredBallsRef.current;
-        let currentScore = scoreRef.current;
-        let scoreChanged = false;
-
-        // Ball-in-field detection
-        updatedBalls.forEach((ball) => {
-          let isInsideAnyField = false;
-          bonusFields.forEach((field) => {
-            // const ball = updatedBalls[i]
-            const dx = field.x - ball.x;
-            const dy = field.y - ball.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const minDist = field.radius - 0.5 * ball.radius;
-
-            if (distance < minDist) {
-              isInsideAnyField = true;
-              if (!currentScoredBalls.has(ball.value)) {
-                const points = ball.value * field.multiplier;
-                currentScore += points;
-                currentScoredBalls.set(ball.value, points);
-                scoreChanged = true;
-              }
-            }
-          });
-          if (!isInsideAnyField && currentScoredBalls.has(ball.id)) {
-            const pointsToRemove = currentScoredBalls.get(ball.id) || 0;
-            currentScore -= pointsToRemove;
-            currentScoredBalls.delete(ball.id);
-            scoreChanged = true;
-          }
-        });
-        scoreRef.current = currentScore;
-        ballsRef.current = updatedBalls;
-
-        // Check if any balls are moving
-        ballsMovingRef.current = updatedBalls.some(
-          (ball) => Math.abs(ball.vx) > 0.01 || Math.abs(ball.vy) > 0.01
+      const {width, height} = dimensions
+    
+      const render = () => {
+        // 1. Oblicz fizykę używając wydzielonego modułu
+        const result = calculatePhysicsFrame(
+            ballsRef.current,
+            dimensions,
+            bonusFields,
+            scoreRef.current,
+            scoredBallsRef.current
         );
 
-        if (scoreChanged) {
-          if (onScoreChange) {
-            onScoreChange(currentScore);
-          }
-        }
-      };
+        // 2. Aktualizuj referencje
+        ballsRef.current = result.updatedBalls;
+        ballsMovingRef.current = result.areMoving;
+        scoredBallsRef.current = result.activeScoredBalls;
+        scoreRef.current = result.totalScore;
 
-      const render = () => {
+        if (result.scoreChanged && onScoreChange) {
+          onScoreChange(result.totalScore);
+        }
         // Clear canvas
         ctx.fillStyle = "#0A5F38";
         ctx.fillRect(0, 0, width, height);
@@ -366,7 +248,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           ctx.fillText(ball.value, ball.x, ball.y);
         });
 
-        updatePhysics();
+        // updatePhysics();
         animationFrameRef.current = requestAnimationFrame(render);
       };
 
