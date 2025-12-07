@@ -1,7 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { PoolBoard, type PoolBoardRef } from "./components/PoolBoard";
-import { ForceBtn } from "./components/ForceBtn";
-import { Check } from "lucide-react";
+import { Sidebar } from "./components/Sidebar";
 import { StartView } from "./components/startView";
 
 type GamePhase = "start" | "play";
@@ -14,26 +13,38 @@ interface GameState {
   totalPoints: number;
   shakes: number;
   betAmount: number;
+  balance: number;
+  specialBallsUsed: number;
+  specialBallsTotal: number;
 }
 
 // Generate random ball numbers between 1-49
 const generateBallNumbers = (count: number): number[] => {
-  return Array.from(
-    { length: Math.min(count, 20) },
-    () => Math.floor(Math.random() * 49) + 1
-  );
+  const safeCount = Math.min(count, 20);
+
+  const numbers = Array.from({ length: 49 }, (_, i) => i + 1);
+
+  for (let i = numbers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+  }
+
+  return numbers.slice(0, safeCount).sort((a, b) => a - b);
 };
 
 function App() {
   const poolBoardRef = useRef<PoolBoardRef>(null);
   const [gameState, setGameState] = useState<GameState>({
     phase: "start",
-    ballNumbers: generateBallNumbers(20),
+    ballNumbers: generateBallNumbers(0),
     round: 1,
     currentPointsOnBoard: 0,
     totalPoints: 0,
     shakes: 3,
     betAmount: 0,
+    balance: 500,
+    specialBallsUsed: 3,
+    specialBallsTotal: 0,
   });
 
   const [ballsInFields, setBallsInFields] = useState<number[]>([]);
@@ -72,11 +83,15 @@ function App() {
       totalPoints: 0,
       shakes: 3,
       betAmount,
+      balance: prev.balance - betAmount,
+      specialBallsUsed: 3,
+      specialBallsTotal: 0,
     }));
   };
 
   const handleEndGamge = () => {
-    setGameState({
+    setGameState((prev) => ({
+      ...prev,
       phase: "start",
       ballNumbers: generateBallNumbers(6),
       round: 1,
@@ -84,7 +99,7 @@ function App() {
       totalPoints: gameState.currentPointsOnBoard + gameState.totalPoints,
       shakes: 3,
       betAmount: 0,
-    });
+    }));
     alert("Game Over!");
   };
 
@@ -96,49 +111,17 @@ function App() {
     }));
   };
 
-  const handleBallCountChange = (count: number) => {
-    const limitedCount = Math.min(count, 20);
-    setGameState((prev) => ({
-      ...prev,
-      ballNumbers: generateBallNumbers(limitedCount),
-    }));
-  };
-
   return (
-    <div className="h-screen bg-bg flex gap-8">
-      <div className="w-1/4 flex flex-col justify-center items-start gap-8 p-4">
-        {/* <div className="text-white space-y-2">
-          <div className="text-xl">
-            <span className="font-bold">Round:</span> {gameState.round}
-          </div>
-          <div className="text-xl">
-            <span className="font-bold">Points on Board:</span>{" "}
-            {gameState.currentPointsOnBoard}
-          </div>
-          <div className="text-xl">
-            <span className="font-bold">Total Points:</span>{" "}
-            {gameState.totalPoints}
-          </div>
-        </div> */}
-        <div>
-          <img src="/imgs/coolki.png" alt="Coolki" />
-        </div>
-
-        <div className="flex gap-4">
-          <ForceBtn
-            onShake={handleShake}
-            disabled={gameState.shakes < 1 || ballsMoving}
-            shakesRemaining={gameState.shakes}
-          />
-          <button
-            onClick={handleEndGamge}
-            className="w-16 h-16 bg-blue-600 text-white grid place-items-center hover:cursor-pointer"
-          >
-            <Check className="w-8 h-8" />
-          </button>
-        </div>
+    <div className="h-screen bg-bg flex w-screen">
+      <div className="flex items-center justify-center">
+        <Sidebar
+          gameState={gameState}
+          onShake={handleShake}
+          onEndGame={handleEndGamge}
+          ballsMoving={ballsMoving}
+        />
       </div>
-      <div className="w-3/4 h-full flex flex-col">
+      <div className="w-full h-full flex flex-col">
         <div className="flex-1">
           {gameState.phase === "start" ? (
             <StartView handleStartGame={handleStartGame} />

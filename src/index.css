@@ -17,4 +17,5 @@ button {
 @theme {
   --color-bg: #323a3a;
   --color-primary: #d3b652;
+  --color-bg-side: #1d2628;
 }

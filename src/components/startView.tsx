@@ -78,14 +78,14 @@ export const StartView = ({ handleStartGame }: Props) => {
           <div className="bg-gray-800 w-full py-3 px-4 rounded-xl text-center flex items-center justify-between">
             <span className="text-white text-xl font-bold">zakład</span>
             <span className="text-white text-2xl font-bold min-w-[80px] bg-[#333A3C] rounded-md">
-              {betAmounts[key]} zł
+              {betAmounts[key]} pk
             </span>
           </div>
 
           {/* Total */}
           <div className="bg-primary w-full py-5 rounded-xl text-center">
             <span className="text-4xl font-bold text-black">
-              {calculateTotal(key)} zł
+              {calculateTotal(key)} pk
             </span>
           </div>
 
