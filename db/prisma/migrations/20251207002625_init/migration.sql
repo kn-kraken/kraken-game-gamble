@@ -1,0 +1,8 @@
+-- CreateTable
+CREATE TABLE "Score" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "playerName" TEXT NOT NULL,
+    "points" INTEGER NOT NULL,
+    "round" INTEGER NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
