@@ -124,7 +124,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       const { width, height } = dimensions;
 
       const balls: Ball[] = [];
-      const ballRadius = 20;
+      const ballRadius = 30;
       const minDistance = ballRadius * 2.5;
 
       const PADDING = 30;
@@ -305,8 +305,8 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
             ballImg[ball.value - 1],
             ball.x - ball.radius, // Pozycja X (przesunięta o promień w lewo)
             ball.y - ball.radius, // Pozycja Y (przesunięta o promień w górę)
-            ball.radius * 2, // Szerokość (średnica)
-            ball.radius * 2 // Wysokość (średnica)
+            85, // Szerokość (średnica)
+            85 // Wysokość (średnica)
           );
         });
 
