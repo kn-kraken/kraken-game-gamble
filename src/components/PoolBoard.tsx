@@ -261,15 +261,32 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
         // Draw bonus fields
         bonusFields.forEach((field) => {
           ctx.beginPath();
-          ctx.arc(field.x, field.y, field.radius, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255, 215, 255, 0.1)";
-          ctx.fill();
-          ctx.strokeStyle = "rgba(255, 215, 255, 0.6)";
+
+          // Draw rough circle
+          const segments = 50;
+          const roughness = 3; // Adjust for more/less roughness
+
+          for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            const offset = (Math.random() - 0.5) * roughness;
+            const radius = field.radius + offset;
+            const x = field.x + Math.cos(angle) * radius;
+            const y = field.y + Math.sin(angle) * radius;
+
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+
+          ctx.closePath();
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
           ctx.lineWidth = 3;
           ctx.stroke();
 
           // Draw multiplier text
-          ctx.fillStyle = "rgba(255, 215, 255, 0.6)";
+          ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
           ctx.font = "bold 24px Arial";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
