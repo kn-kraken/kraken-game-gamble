@@ -164,7 +164,7 @@ export const applyShakeForce = (
 ): Ball[] => {
   return balls.map((ball) => ({
     ...ball,
-    vx: ball.vx + (Math.random() - 0.5) * (SPEED / ball.value) * forceFactor,
-    vy: ball.vy + (Math.random() - 0.5) * (SPEED / ball.value) * forceFactor,
+    vx: ball.vx + (Math.random() - 0.5) * (SPEED / Math.sqrt(ball.value)) * forceFactor,
+    vy: ball.vy + (Math.random() - 0.5) * (SPEED / Math.sqrt(ball.value)) * forceFactor,
   }));
 };

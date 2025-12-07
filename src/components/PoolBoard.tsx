@@ -6,13 +6,10 @@ import {
   useImperativeHandle,
   useMemo,
 } from "react";
-import { type Ball, type BonusField } from "./types.tsx";
+import { type Ball, type BonusField, ballImg } from "./types.tsx";
 import { calculatePhysicsFrame, applyShakeForce } from "./physics.tsx";
 
 // Przygotowana tekstura "3D Blue Orb" w formacie Data URI
-const ballImg = new Image();
-ballImg.src =
-  "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22grad%22%20cx%3D%2230%25%22%20cy%3D%2230%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22%2F%3E%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%234facfe%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2300f2fe%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22url(%23grad)%22%2F%3E%3C%2Fsvg%3E";
 
 const bgImg = new Image();
 bgImg.src = "/imgs/bg.png";
@@ -116,23 +113,6 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
     // Initialize balls
     useEffect(() => {
       const { width, height } = dimensions;
-      const colors = [
-        "#FFD700",
-        "#FF4444",
-        "#4444FF",
-        "#FF8844",
-        "#44FF44",
-        "#8844FF",
-        "#FF44FF",
-        "#44FFFF",
-        "#FFA500",
-        "#800080",
-        "#00FF00",
-        "#FF1493",
-        "#1E90FF",
-        "#FFD700",
-        "#DC143C",
-      ];
 
       const balls: Ball[] = [];
       const ballRadius = 35;
@@ -141,6 +121,17 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       // Helper function to check if a position is valid (no overlap)
       const PADDING = 30;
       const BOTTOM_PADDING = 100;
+
+      const predefinedValues = ballNumbers || [];
+      const usedValuesSet = new Set(predefinedValues);
+
+      const poolOfNumbers = Array.from({ length: 49 }, (_, i) => i + 1)
+        .filter(n => !usedValuesSet.has(n));
+
+      for (let i = poolOfNumbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [poolOfNumbers[i], poolOfNumbers[j]] = [poolOfNumbers[j], poolOfNumbers[i]];
+      }
       const isValidPosition = (x: number, y: number, existingBalls: Ball[]) => {
         // Check bounds - constrain to playing field
         if (
@@ -168,8 +159,17 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       for (let ballId = 0; ballId < ballCount; ballId++) {
         let attempts = 0;
         let x: number, y: number;
-        const value = ballNumbers[ballId] || Math.floor(Math.random() * 49) + 1;
+        let value: number;
 
+      if (predefinedValues[ballId] !== undefined) {
+        value = predefinedValues[ballId];
+      } else {
+        if (poolOfNumbers.length === 0) {
+          value = 0;
+        } else {
+          value = poolOfNumbers.pop()!;
+        }
+      }
         // Try to find a valid position (max 1000 attempts)
         do {
           x =
@@ -191,7 +191,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           vx: 0,
           vy: 0,
           radius: ballRadius,
-          color: colors[ballId % colors.length],
+          color: "#FFFFFF",
           value: value,
         });
       }
