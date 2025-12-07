@@ -1,9 +1,8 @@
 // physicsEngine.ts
-import { type Ball, type BonusField, type Dimensions } from "./types";
+import { type Ball, type BonusField, type Dimensions, SPEED } from "./types";
 
 const FRICTION = 0.98;
 const RESTITUTION = 0.9;
-const SPEED = 100;
 
 export interface PhysicsResult {
   updatedBalls: Ball[];

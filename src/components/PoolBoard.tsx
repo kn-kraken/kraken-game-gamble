@@ -6,7 +6,7 @@ import {
   useImperativeHandle,
   useMemo,
 } from "react";
-import { type Ball, type BonusField, ballImg } from "./types.tsx";
+import { type Ball, type BonusField, ballImg, SPEED } from "./types.tsx";
 import { calculatePhysicsFrame, applyShakeForce } from "./physics.tsx";
 
 // Przygotowana tekstura "3D Blue Orb" w formacie Data URI
@@ -178,8 +178,8 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           id: ballId,
           x,
           y,
-          vx: 0,
-          vy: 0,
+          vx: (Math.random() - 0.5) * (SPEED / Math.sqrt(values[ballId])),
+          vy: (Math.random() - 0.5) * (SPEED / Math.sqrt(values[ballId])),
           radius: ballRadius,
           color: "#FFFFFF",
           value: values[ballId],
