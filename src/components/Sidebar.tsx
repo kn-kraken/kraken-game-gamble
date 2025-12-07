@@ -148,31 +148,34 @@ export function Sidebar({
       </div>
 
       {/* Balls and Shakes Info */}
-      
-      {gameState.phase === "start" ? (
+
+      {gameState.phase !== "start" ? (
         <div className="bg-bg-side rounded-3xl p-4 shadow-lg">
-        <div className="grid grid-cols-[1fr_32px_1fr] justify-center gap-3 items-center">
-          {/* Balls */}
-          <div>
-            <p className="text-lg font-bold text-white mb-2">kulki</p>
-            <div className="bg-[#6bc97d] rounded-2xl px-4 py-3 text-center">
-              <span className="text-3xl font-bold text-white">{ballCount}</span>
+          <div className="grid grid-cols-[1fr_32px_1fr] justify-center gap-3 items-center">
+            {/* Balls */}
+            <div>
+              <p className="text-lg font-bold text-white mb-2">kulki</p>
+              <div className="bg-[#6bc97d] rounded-2xl px-4 py-3 text-center">
+                <span className="text-3xl font-bold text-white">
+                  {ballCount}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <span className="text-3xl font-bold self-end -translate-y-[40%] translate-x-2 w-fit text-white">
-            x
-          </span>
+            <span className="text-3xl font-bold self-end -translate-y-[40%] translate-x-2 w-fit text-white">
+              x
+            </span>
 
-          {/* Shakes */}
-          <div>
-            <p className="text-lg font-bold text-white mb-2">strefy</p>
-            <div className="bg-[#c96b6b] rounded-2xl px-4 py-3 text-center flex items-center justify-center gap-2">
-              <span className="text-3xl font-bold text-white">{0}</span>
+            {/* Shakes */}
+            <div>
+              <p className="text-lg font-bold text-white mb-2">strefy</p>
+              <div className="bg-[#c96b6b] rounded-2xl px-4 py-3 text-center flex items-center justify-center gap-2">
+                <span className="text-3xl font-bold text-white">{0}</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>) : ( null ) }
+      ) : null}
       {/* Score Display */}
       <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
         <p className="text-2xl font-bold text-white  flex-1 flex items-center justify-center">
