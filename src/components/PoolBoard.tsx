@@ -262,14 +262,14 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
         bonusFields.forEach((field) => {
           ctx.beginPath();
           ctx.arc(field.x, field.y, field.radius, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255, 215, 0, 0.3)";
+          ctx.fillStyle = "rgba(255, 215, 255, 0.1)";
           ctx.fill();
-          ctx.strokeStyle = "rgba(255, 215, 0, 0.6)";
+          ctx.strokeStyle = "rgba(255, 215, 255, 0.6)";
           ctx.lineWidth = 3;
           ctx.stroke();
 
           // Draw multiplier text
-          ctx.fillStyle = "#FFD700";
+          ctx.fillStyle = "rgba(255, 215, 255, 0.6)";
           ctx.font = "bold 24px Arial";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
