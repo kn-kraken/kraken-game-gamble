@@ -14,6 +14,9 @@ const ballImg = new Image();
 ballImg.src =
   "data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Cdefs%3E%3CradialGradient%20id%3D%22grad%22%20cx%3D%2230%25%22%20cy%3D%2230%25%22%20r%3D%2270%25%22%3E%3Cstop%20offset%3D%220%25%22%20stop-color%3D%22%23ffffff%22%2F%3E%3Cstop%20offset%3D%2250%25%22%20stop-color%3D%22%234facfe%22%2F%3E%3Cstop%20offset%3D%22100%25%22%20stop-color%3D%22%2300f2fe%22%2F%3E%3C%2FradialGradient%3E%3C%2Fdefs%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22url(%23grad)%22%2F%3E%3C%2Fsvg%3E";
 
+const bgImg = new Image();
+bgImg.src = "/imgs/bg.png";
+
 export interface PoolBoardRef {
   shake: (forceFactor?: number) => void;
   areBallsMoving: () => boolean;
@@ -225,9 +228,13 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
         }
         // drawing game
 
-        // Clear canvas
-        ctx.fillStyle = "#0A5F38";
-        ctx.fillRect(0, 0, width, height);
+        // Clear canvas and draw background
+        if (bgImg.complete) {
+          ctx.drawImage(bgImg, 0, 0, width, height);
+        } else {
+          ctx.fillStyle = "#0A5F38";
+          ctx.fillRect(0, 0, width, height);
+        }
 
         // Draw playing field boundary (white rectangle)
         const PADDING = 30;

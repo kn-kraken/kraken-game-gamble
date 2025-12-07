@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { PoolBoard, type PoolBoardRef } from "./components/PoolBoard";
 import { ForceBtn } from "./components/ForceBtn";
 import { Check } from "lucide-react";
+import { StartView } from "./components/startView";
 
 type GamePhase = "start" | "play";
 
@@ -12,6 +13,7 @@ interface GameState {
   currentPointsOnBoard: number;
   totalPoints: number;
   shakes: number;
+  betAmount: number;
 }
 
 // Generate random ball numbers between 1-49
@@ -31,6 +33,7 @@ function App() {
     currentPointsOnBoard: 0,
     totalPoints: 0,
     shakes: 3,
+    betAmount: 0,
   });
 
   const [ballsInFields, setBallsInFields] = useState<number[]>([]);
@@ -59,15 +62,16 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleStartGame = () => {
+  const handleStartGame = (ballCount: number, betAmount: number) => {
     setGameState((prev) => ({
       ...prev,
       phase: "play",
-      ballNumbers: generateBallNumbers(prev.ballNumbers.length),
+      ballNumbers: generateBallNumbers(ballCount),
       round: 1,
       currentPointsOnBoard: 0,
       totalPoints: 0,
       shakes: 3,
+      betAmount,
     }));
   };
 
@@ -79,6 +83,7 @@ function App() {
       currentPointsOnBoard: 0,
       totalPoints: gameState.currentPointsOnBoard + gameState.totalPoints,
       shakes: 3,
+      betAmount: 0,
     });
     alert("Game Over!");
   };
@@ -102,9 +107,7 @@ function App() {
   return (
     <div className="h-screen bg-bg flex gap-8">
       <div className="w-1/4 flex flex-col justify-center items-start gap-8 p-4">
-        <div>test</div>
-
-        <div className="text-white space-y-2">
+        {/* <div className="text-white space-y-2">
           <div className="text-xl">
             <span className="font-bold">Round:</span> {gameState.round}
           </div>
@@ -116,6 +119,9 @@ function App() {
             <span className="font-bold">Total Points:</span>{" "}
             {gameState.totalPoints}
           </div>
+        </div> */}
+        <div>
+          <img src="/imgs/coolki.png" alt="Coolki" />
         </div>
 
         <div className="flex gap-4">
@@ -134,41 +140,46 @@ function App() {
       </div>
       <div className="w-3/4 h-full flex flex-col">
         <div className="flex-1">
-          <PoolBoard
-            ref={poolBoardRef}
-            ballCount={gameState.ballNumbers.length}
-            ballNumbers={gameState.ballNumbers}
-            onScoreChange={handleScoreUpdate}
-            onBallsInFieldChange={setBallsInFields}
-          />
-        </div>
+          {gameState.phase === "start" ? (
+            <StartView handleStartGame={handleStartGame} />
+          ) : (
+            <>
+              <PoolBoard
+                ref={poolBoardRef}
+                ballCount={gameState.ballNumbers.length}
+                ballNumbers={gameState.ballNumbers}
+                onScoreChange={handleScoreUpdate}
+                onBallsInFieldChange={setBallsInFields}
+              />
 
-        {/* Bottom ball display */}
-        <div className="bg-bg p-4  fixed bottom-2 rounded-r-full">
-          <div className="flex items-center justify-center gap-1 flex-wrap">
-            {gameState.ballNumbers.map((num, index) => {
-              const isInField = ballsInFields.includes(index);
-              return (
-                <div
-                  key={index}
-                  className="w-12 h-12 rounded-full bg-[#FFD700] flex items-center justify-center shadow-lg relative transition-all duration-200"
-                  style={{
-                    boxShadow: isInField
-                      ? "0 8px 12px rgba(255,215,0,0.6), 0 4px 6px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)"
-                      : "0 4px 6px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)",
-                    transform: isInField
-                      ? "translateY(-8px) scale(1.1)"
-                      : "translateY(0) scale(1)",
-                  }}
-                >
-                  <span className="text-black font-bold text-sm z-10">
-                    {num}
-                  </span>
-                  <div className="absolute top-1 left-2 w-3 h-3 rounded-full bg-white opacity-60" />
+              <div className="bg-bg p-4  fixed bottom-2 rounded-r-full">
+                <div className="flex items-center justify-center gap-1 flex-wrap">
+                  {gameState.ballNumbers.map((num, index) => {
+                    const isInField = ballsInFields.includes(index);
+                    return (
+                      <div
+                        key={index}
+                        className="w-12 h-12 rounded-full bg-[#FFD700] flex items-center justify-center shadow-lg relative transition-all duration-200"
+                        style={{
+                          boxShadow: isInField
+                            ? "0 8px 12px rgba(255,215,0,0.6), 0 4px 6px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)"
+                            : "0 4px 6px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)",
+                          transform: isInField
+                            ? "translateY(-8px) scale(1.1)"
+                            : "translateY(0) scale(1)",
+                        }}
+                      >
+                        <span className="text-black font-bold text-sm z-10">
+                          {num}
+                        </span>
+                        <div className="absolute top-1 left-2 w-3 h-3 rounded-full bg-white opacity-60" />
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
