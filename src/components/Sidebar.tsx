@@ -294,7 +294,7 @@ export function Sidebar({
             shakes < 1 || ballsMoving ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
-          <span className="text-xl font-bold text-white">SHAKE!</span>
+          <span className="text-xl font-bold text-white">TRZĄŚ!</span>
         </button>
       </div>
 
