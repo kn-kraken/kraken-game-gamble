@@ -450,7 +450,7 @@ export function Sidebar({
           onMouseLeave={handleMouseLeave}
           onTouchStart={handleMouseDown}
           onTouchEnd={handleMouseUp}
-          disabled={shakes < 1 || ballsMoving} // warunek blokowania
+          disabled={shakes < 1 || ballsMoving || gameState.phase === "start"} // warunek blokowania
           className={`bg-[#6bc97d] hover:bg-[#5bb86d] rounded-3xl px-4 py-6 text-center transition-colors shadow-lg cursor-pointer ${
             shakes < 1 || ballsMoving ? "opacity-50 cursor-not-allowed hover:bg-[#6bc97d]" : ""
           }`}
