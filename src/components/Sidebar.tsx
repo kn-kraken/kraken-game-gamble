@@ -276,9 +276,13 @@ export function Sidebar({
         </button>
 
         {/* End Game */}
+        {/* Koniec - z warunkowym blokowaniem */}
         <button
           onClick={onEndGame}
-          className="bg-[#c96b6b] hover:bg-[#b95b5b] rounded-3xl px-4 py-6 text-center transition-colors shadow-lg"
+          disabled={shakes < 1 || ballsMoving} // warunek blokowania
+          className={`bg-[#c96b6b] hover:bg-[#b95b5b] rounded-3xl px-4 py-6 text-center transition-colors shadow-lg ${
+            shakes < 1 || ballsMoving ? "opacity-50 cursor-not-allowed hover:bg-[#c96b6b]" : ""
+          }`}
         >
           <span className="text-xl font-bold text-white">koniec</span>
         </button>
@@ -290,12 +294,14 @@ export function Sidebar({
           onMouseLeave={handleMouseLeave}
           onTouchStart={handleMouseDown}
           onTouchEnd={handleMouseUp}
+          disabled={shakes < 1 || ballsMoving} // warunek blokowania
           className={`bg-[#6bc97d] hover:bg-[#5bb86d] rounded-3xl px-4 py-6 text-center transition-colors shadow-lg cursor-pointer ${
-            shakes < 1 || ballsMoving ? "opacity-50 cursor-not-allowed" : ""
+            shakes < 1 || ballsMoving ? "opacity-50 cursor-not-allowed hover:bg-[#6bc97d]" : ""
           }`}
         >
           <span className="text-xl font-bold text-white">TRZĄŚ!</span>
         </button>
+
       </div>
 
       {/* Shake Bar - shows the force */}
