@@ -129,7 +129,6 @@ export function Sidebar({
     if (gameState.phase === "scoring" && scoringData.length > 0) {
       // Start scoring animation
       // console.log("Starting scoring animation, totalPoints:", totalPoints);
-      gameState.totalPoints = 0;
       setCurrentScoringIndex(0);
       setAccumulatedTotal(totalPoints);
     } else if (gameState.phase !== "scoring") {

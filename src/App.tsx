@@ -135,6 +135,7 @@ function App() {
       ...prev,
       phase: "physics",
       shakes: Math.max(0, prev.shakes - 1),
+      currentPointsOnBoard: 0,
     }));
   };
 
@@ -164,25 +165,25 @@ function App() {
         ...prev,
         phase: "play",
         balance: prev.balance,
-        totalPoints: prev.totalPoints,
+        totalPoints: prev.totalPoints + totalEarned,
       };
     });
     setBallsInFieldsData([]);
   };
 
   const resetGame = () => {
-    setGameState((prev) =>
-      {return {
-      phase: "start",
-      ballNumbers: [],
-      round: 1,
-      currentPointsOnBoard: 0,
-      totalPoints: 0,
-      shakes: 3,
-      betAmount: 0,
-      balance: prev.balance + prev.totalPoints,
-      specialBallsUsed: 3,
-      specialBallsTotal: 0,
+    setGameState((prev) => {
+      return {
+        phase: "start",
+        ballNumbers: [],
+        round: 1,
+        currentPointsOnBoard: 0,
+        totalPoints: 0,
+        shakes: 3,
+        betAmount: 0,
+        balance: prev.balance + prev.totalPoints,
+        specialBallsUsed: 3,
+        specialBallsTotal: 0,
       };
     });
     setBallsInFields([]);
