@@ -274,32 +274,12 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
 
           // Draw ball (no visual changes on board)
           ctx.drawImage(
-            ballImg,
+            ballImg[ball.value-1],
             ball.x - ball.radius, // Pozycja X (przesunięta o promień w lewo)
             ball.y - ball.radius, // Pozycja Y (przesunięta o promień w górę)
             ball.radius * 2, // Szerokość (średnica)
             ball.radius * 2 // Wysokość (średnica)
           );
-          // ctx.beginPath();
-          // ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-          // ctx.fillStyle = ball.color;
-          // ctx.fill();
-          // ctx.strokeStyle = "#333";
-          // ctx.lineWidth = 2;
-          // ctx.stroke();
-
-          // Add shine effect
-          ctx.beginPath();
-          ctx.arc(ball.x - 10, ball.y - 10, ball.radius / 3, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
-          ctx.fill();
-
-          //Add ball value text
-          ctx.fillStyle = "#000000";
-          ctx.font = "bold 12px Arial";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(ball.value.toString(), ball.x, ball.y);
         });
 
         // Notify parent about balls in fields

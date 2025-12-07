@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { PoolBoard, type PoolBoardRef } from "./components/PoolBoard";
 import { Sidebar } from "./components/Sidebar";
 import { StartView } from "./components/startView";
+import { ballImg } from "./components/types";
 
 type GamePhase = "start" | "play";
 
@@ -142,20 +143,22 @@ function App() {
                     return (
                       <div
                         key={index}
-                        className="w-12 h-12 rounded-full bg-[#FFD700] flex items-center justify-center shadow-lg relative transition-all duration-200"
+                        className="w-12 h-12 flex items-center justify-center relative transition-all duration-200"
                         style={{
-                          boxShadow: isInField
-                            ? "0 8px 12px rgba(255,215,0,0.6), 0 4px 6px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)"
-                            : "0 4px 6px rgba(0,0,0,0.3), inset -2px -2px 4px rgba(0,0,0,0.2), inset 2px 2px 4px rgba(255,255,255,0.3)",
+                          filter: isInField
+                            ? "drop-shadow(0 8px 6px rgba(255,215,0,0.6),)"
+                            : "drop-shadow(0 4px 4px rgba(0, 0, 0, 0.3))",
                           transform: isInField
                             ? "translateY(-8px) scale(1.1)"
                             : "translateY(0) scale(1)",
                         }}
                       >
-                        <span className="text-black font-bold text-sm z-10">
-                          {num}
-                        </span>
-                        <div className="absolute top-1 left-2 w-3 h-3 rounded-full bg-white opacity-60" />
+                        <img
+                          src={ballImg[num-1].src}
+                          alt={`Ball ${num}`}
+                          className="absolute top-0 left-0 w-full h-full object-contain"
+                          draggable={false}
+                        />
                       </div>
                     );
                   })}
