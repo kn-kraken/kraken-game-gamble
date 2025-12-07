@@ -227,7 +227,7 @@ export function Sidebar({
 
       {/* Coin Display Card */}
       <div className={`bg-[#4a6d8c] rounded-3xl p-4 shadow-lg `}>
-        {ballCount > 0 ? (
+        {ballCount !== 0 ? (
           <div className="flex items-center gap-4">
             {/* Coin Image */}
             <div className="relative w-24 h-24 flex-shrink-0">
@@ -247,7 +247,21 @@ export function Sidebar({
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-24" />
+          <div className="flex items-center gap-4">
+            {/* Coin Image */}
+            <div className="relative w-24 h-24 flex-shrink-0">
+              <img
+                src={`/imgs/coins/0.png`}
+                alt={`Ball count ${ballCount}`}
+                className="absolute inset-0 w-full h-full object-cover scale-110"
+              />
+            </div>
+
+            {/* Text Info */}
+            <div className="bg-[#b3d4f0] rounded-2xl px-4 py-3 flex-1">
+              <p className="text-lg font-bold text-black">Wybierz tryb gry</p>
+            </div>
+          </div>
         )}
       </div>
 
@@ -449,12 +463,13 @@ export function Sidebar({
           onTouchEnd={handleMouseUp}
           disabled={shakes < 1 || ballsMoving || gameState.phase === "start"} // warunek blokowania
           className={`bg-[#6bc97d] hover:bg-[#5bb86d] rounded-3xl px-4 py-6 text-center transition-colors shadow-lg cursor-pointer ${
-            shakes < 1 || ballsMoving ? "opacity-50 cursor-not-allowed hover:bg-[#6bc97d]" : ""
+            shakes < 1 || ballsMoving
+              ? "opacity-50 cursor-not-allowed hover:bg-[#6bc97d]"
+              : ""
           }`}
         >
           <span className="text-xl font-bold text-white">TRZĄŚ!</span>
         </button>
-
       </div>
 
       {/* Shake Bar - shows the force */}
