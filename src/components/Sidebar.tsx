@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue } from "framer-motion";
+import { Leaderboard } from "./Leaderboard";
 
 type GamePhase = "start" | "play";
 
@@ -44,6 +45,7 @@ export function Sidebar({
   const [displayForce, setDisplayForce] = useState(0);
   const animationRef = useRef<number | null>(null);
   const directionRef = useRef<1 | -1>(1); // 1 for increasing, -1 for decreasing
+  const [leaderboardRefresh, setLeaderboardRefresh] = useState(0);
 
   // Update display value when motion value changes
   useEffect(() => {
@@ -188,7 +190,7 @@ export function Sidebar({
       </div>
       ) : 
       <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
-        
+        <Leaderboard refreshTrigger={leaderboardRefresh} />
       </div>}
       {/* Balance and Bet */}
       

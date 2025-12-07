@@ -115,7 +115,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       const { width, height } = dimensions;
     
       const balls: Ball[] = [];
-      const ballRadius = 30;
+      const ballRadius = 20;
       const minDistance = ballRadius * 2.5;
     
       const PADDING = 30;
