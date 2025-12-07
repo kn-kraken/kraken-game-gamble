@@ -149,7 +149,7 @@ export function Sidebar({
 
       {/* Balls and Shakes Info */}
       
-      {gameState.phase === "start" ? (
+      {gameState.phase != "start" ? (
         <div className="bg-bg-side rounded-3xl p-4 shadow-lg">
         <div className="grid grid-cols-[1fr_32px_1fr] justify-center gap-3 items-center">
           {/* Balls */}
@@ -174,6 +174,7 @@ export function Sidebar({
         </div>
       </div>) : ( null ) }
       {/* Score Display */}
+      {gameState.phase != "start" ? (
       <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
         <p className="text-2xl font-bold text-white  flex-1 flex items-center justify-center">
           wynik
@@ -182,8 +183,12 @@ export function Sidebar({
           <span className="text-4xl font-bold text-white">{totalScore}</span>
         </div>
       </div>
-
+      ) : 
+      <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
+        
+      </div>}
       {/* Balance and Bet */}
+      
       <div className="grid grid-cols-3 gap-3">
         {/* Balance */}
         <div className="bg-bg-side rounded-3xl flex p-3 shadow-lg col-span-2">
@@ -196,6 +201,7 @@ export function Sidebar({
         </div>
 
         {/* Bet Amount */}
+        {gameState.phase != "start" ? (
         <div className="bg-bg-side rounded-3xl p-2 shadow-lg flex flex-col items-center">
           <p className="text-2xl font-bold text-[#e87d3e] mb-2 flex-1">kurs</p>
           <div className="bg-[#3a4a4a] rounded-2xl flex-1 px-3 py-2 w-full text-center">
@@ -203,7 +209,7 @@ export function Sidebar({
               {betAmount} <span className="text-white">pk</span>
             </span>
           </div>
-        </div>
+        </div>) : ( null ) }
       </div>
 
       {/* Special Balls and Moves */}
@@ -242,12 +248,18 @@ export function Sidebar({
         </div>
 
         <div className="bg-bg-side rounded-3xl p-2 shadow-lg flex flex-col items-center">
+        {gameState.phase != "start" ? (<div>
           <p className="text-2xl font-bold text-[#e87d3e] flex-1">ruchy</p>
           <div className="bg-[#3a4a4a] rounded-2xl flex-1  flex-end justify-center px-3 py-2 w-full text-center">
             <div className="text-2xl font-bold text-white translate-y-[8px]">
               {3}/<span className="text-4xl text-[#e87d3e]">{shakes}</span>
             </div>
           </div>
+          </div>) :
+          <p className="text-2xl font-bold text-white flex-1 flex items-center justify-center">
+            edytuj
+          </p> 
+          }
         </div>
       </div>
 

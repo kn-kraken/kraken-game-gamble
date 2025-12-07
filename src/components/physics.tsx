@@ -120,7 +120,7 @@ export const calculatePhysicsFrame = (
     bonusFields.forEach((field) => {
       const dx = field.x - ball.x;
       const dy = field.y - ball.y;
-      const distance = Math.sqrt(dx * dx + dy * dy)*1.1;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
       // Ball must be fully inside the field (same logic as rendering)
       if (distance + ball.radius <= field.radius) {
