@@ -129,6 +129,7 @@ export function Sidebar({
     if (gameState.phase === "scoring" && scoringData.length > 0) {
       // Start scoring animation
       // console.log("Starting scoring animation, totalPoints:", totalPoints);
+      gameState.totalPoints = 0;
       setCurrentScoringIndex(0);
       setAccumulatedTotal(totalPoints);
     } else if (gameState.phase !== "scoring") {
@@ -219,7 +220,6 @@ export function Sidebar({
       handleMouseUp();
     }
   };
-
   return (
     <div className="w-full max-w-[560px] h-screen flex flex-col p-4 justify-between">
       {/* Header - Coolki */}
@@ -435,7 +435,7 @@ export function Sidebar({
         {/* Koniec - z warunkowym blokowaniem */}
         <button
           onClick={onEndGame}
-          disabled={shakes < 1 || ballsMoving} // warunek blokowania
+          // disabled={shakes < 1 || ballsMoving && gameState.round == 0} // warunek blokowania
           className={`bg-[#c96b6b] hover:bg-[#b95b5b] rounded-3xl px-4 py-6 text-center transition-colors shadow-lg ${
             shakes < 1 || ballsMoving ? "opacity-50 cursor-not-allowed hover:bg-[#c96b6b]" : ""
           }`}
