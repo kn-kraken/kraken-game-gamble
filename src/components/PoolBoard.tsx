@@ -113,92 +113,83 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
     // Initialize balls
     useEffect(() => {
       const { width, height } = dimensions;
-
+    
       const balls: Ball[] = [];
       const ballRadius = 35;
-      const minDistance = ballRadius * 2.5; // Minimum distance between ball centers
-
-      // Helper function to check if a position is valid (no overlap)
+      const minDistance = ballRadius * 2.5;
+    
       const PADDING = 30;
       const BOTTOM_PADDING = 100;
-
+    
       const predefinedValues = ballNumbers || [];
       const usedValuesSet = new Set(predefinedValues);
-
-      const poolOfNumbers = Array.from({ length: 49 }, (_, i) => i + 1)
+    
+      const poolOfNumbers = Array
+        .from({ length: 49 }, (_, i) => i + 1)
         .filter(n => !usedValuesSet.has(n));
-
+    
       for (let i = poolOfNumbers.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [poolOfNumbers[i], poolOfNumbers[j]] = [poolOfNumbers[j], poolOfNumbers[i]];
       }
+      const values: number[] = [];
+    
+      for (let i = 0; i < ballCount; i++) {
+        if (predefinedValues[i] !== undefined) {
+          values.push(predefinedValues[i]);
+        } else {
+          values.push(poolOfNumbers.pop()!);
+        }
+      }
+    
+      const seen = new Set<number>();
+      for (let i = 0; i < values.length; i++) {
+        if (seen.has(values[i])) {
+          values[i] = poolOfNumbers.pop()!;
+        }
+        seen.add(values[i]);
+      }
       const isValidPosition = (x: number, y: number, existingBalls: Ball[]) => {
-        // Check bounds - constrain to playing field
         if (
           x - ballRadius < PADDING ||
           x + ballRadius > width - PADDING ||
           y - ballRadius < PADDING ||
           y + ballRadius > height - BOTTOM_PADDING
-        ) {
-          return false;
-        }
-
-        // Check distance from other balls
+        ) return false;
+    
         for (const ball of existingBalls) {
           const dx = x - ball.x;
           const dy = y - ball.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance < minDistance) {
-            return false;
-          }
+          if (Math.sqrt(dx * dx + dy * dy) < minDistance) return false;
         }
         return true;
       };
-
-      // Generate random positions for all balls
       for (let ballId = 0; ballId < ballCount; ballId++) {
         let attempts = 0;
         let x: number, y: number;
-        let value: number;
-
-      if (predefinedValues[ballId] !== undefined) {
-        value = predefinedValues[ballId];
-      } else {
-        if (poolOfNumbers.length === 0) {
-          value = 0;
-        } else {
-          value = poolOfNumbers.pop()!;
-        }
-      }
-        // Try to find a valid position (max 1000 attempts)
+    
         do {
-          x =
-            PADDING +
-            ballRadius +
-            Math.random() * (width - 2 * PADDING - 2 * ballRadius);
-          y =
-            PADDING +
-            ballRadius +
-            Math.random() * (height - 2 * PADDING - 2 * ballRadius);
+          x = PADDING + ballRadius + Math.random() * (width - 2 * PADDING - 2 * ballRadius);
+          y = PADDING + ballRadius + Math.random() * (height - 2 * PADDING - 2 * ballRadius);
           attempts++;
         } while (!isValidPosition(x, y, balls) && attempts < 1000);
-
-        // If we couldn't find a valid position after many attempts, use the last generated position anyway
+    
         balls.push({
           id: ballId,
-          x: x!,
-          y: y!,
+          x,
+          y,
           vx: 0,
           vy: 0,
           radius: ballRadius,
           color: "#FFFFFF",
-          value: value,
+          value: values[ballId],
         });
       }
-
+      balls.sort((a, b) =>
+        a.value - b.value);
       ballsRef.current = balls;
     }, [dimensions, ballCount, ballNumbers]);
-
+    
     // simulation
     useEffect(() => {
       const canvas = canvasRef.current;
