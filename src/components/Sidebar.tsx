@@ -148,7 +148,9 @@ export function Sidebar({
       </div>
 
       {/* Balls and Shakes Info */}
-      <div className="bg-bg-side rounded-3xl p-4 shadow-lg">
+      
+      {gameState.phase === "start" ? (
+        <div className="bg-bg-side rounded-3xl p-4 shadow-lg">
         <div className="grid grid-cols-[1fr_32px_1fr] justify-center gap-3 items-center">
           {/* Balls */}
           <div>
@@ -170,8 +172,7 @@ export function Sidebar({
             </div>
           </div>
         </div>
-      </div>
-
+      </div>) : ( null ) }
       {/* Score Display */}
       <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
         <p className="text-2xl font-bold text-white  flex-1 flex items-center justify-center">
