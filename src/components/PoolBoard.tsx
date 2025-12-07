@@ -27,6 +27,13 @@ export interface PoolBoardProps {
   ballCount?: number;
   ballNumbers?: number[];
   onBallsInFieldChange?: (ballIds: number[]) => void;
+  onBallsStopped?: (
+    ballsData: Array<{
+      ballId: number;
+      ballValue: number;
+      zoneMultiplier: number;
+    }>
+  ) => void;
 }
 
 export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
@@ -36,12 +43,14 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       ballCount = 6,
       ballNumbers = [],
       onBallsInFieldChange,
+      onBallsStopped,
     } = props;
     const containerRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const animationFrameRef = useRef<number | undefined>(undefined);
     const ballsRef = useRef<Ball[]>([]);
     const ballsMovingRef = useRef<boolean>(false);
+    const previousMovingStateRef = useRef<boolean>(false);
     const [dimensions, setDimensions] = useState({ width: 800, height: 500 });
 
     // Handle container resize
@@ -113,27 +122,30 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
     // Initialize balls
     useEffect(() => {
       const { width, height } = dimensions;
-    
+
       const balls: Ball[] = [];
       const ballRadius = 20;
       const minDistance = ballRadius * 2.5;
-    
+
       const PADDING = 30;
       const BOTTOM_PADDING = 100;
-    
+
       const predefinedValues = ballNumbers || [];
       const usedValuesSet = new Set(predefinedValues);
-    
-      const poolOfNumbers = Array
-        .from({ length: 49 }, (_, i) => i + 1)
-        .filter(n => !usedValuesSet.has(n));
-    
+
+      const poolOfNumbers = Array.from({ length: 49 }, (_, i) => i + 1).filter(
+        (n) => !usedValuesSet.has(n)
+      );
+
       for (let i = poolOfNumbers.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [poolOfNumbers[i], poolOfNumbers[j]] = [poolOfNumbers[j], poolOfNumbers[i]];
+        [poolOfNumbers[i], poolOfNumbers[j]] = [
+          poolOfNumbers[j],
+          poolOfNumbers[i],
+        ];
       }
       const values: number[] = [];
-    
+
       for (let i = 0; i < ballCount; i++) {
         if (predefinedValues[i] !== undefined) {
           values.push(predefinedValues[i]);
@@ -141,7 +153,7 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           values.push(poolOfNumbers.pop()!);
         }
       }
-    
+
       const seen = new Set<number>();
       for (let i = 0; i < values.length; i++) {
         if (seen.has(values[i])) {
@@ -155,8 +167,9 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           x + ballRadius > width - PADDING ||
           y - ballRadius < PADDING ||
           y + ballRadius > height - BOTTOM_PADDING
-        ) return false;
-    
+        )
+          return false;
+
         for (const ball of existingBalls) {
           const dx = x - ball.x;
           const dy = y - ball.y;
@@ -167,13 +180,19 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
       for (let ballId = 0; ballId < ballCount; ballId++) {
         let attempts = 0;
         let x: number, y: number;
-    
+
         do {
-          x = PADDING + ballRadius + Math.random() * (width - 2 * PADDING - 2 * ballRadius);
-          y = PADDING + ballRadius + Math.random() * (height - 2 * PADDING - 2 * ballRadius);
+          x =
+            PADDING +
+            ballRadius +
+            Math.random() * (width - 2 * PADDING - 2 * ballRadius);
+          y =
+            PADDING +
+            ballRadius +
+            Math.random() * (height - 2 * PADDING - 2 * ballRadius);
           attempts++;
         } while (!isValidPosition(x, y, balls) && attempts < 1000);
-    
+
         balls.push({
           id: ballId,
           x,
@@ -185,11 +204,10 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
           value: values[ballId],
         });
       }
-      balls.sort((a, b) =>
-        a.value - b.value);
+      balls.sort((a, b) => a.value - b.value);
       ballsRef.current = balls;
     }, [dimensions, ballCount, ballNumbers]);
-    
+
     // simulation
     useEffect(() => {
       const canvas = canvasRef.current;
@@ -260,6 +278,11 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
 
         // Draw balls
         const ballsInFields: number[] = [];
+        const ballsInFieldsWithData: Array<{
+          ballId: number;
+          ballValue: number;
+          zoneMultiplier: number;
+        }> = [];
         ballsRef.current.forEach((ball) => {
           // Check if ball is in any bonus field
           for (const field of bonusFields) {
@@ -268,13 +291,18 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
             const distance = Math.sqrt(dx * dx + dy * dy);
             if (distance + ball.radius <= field.radius) {
               ballsInFields.push(ball.id);
+              ballsInFieldsWithData.push({
+                ballId: ball.id,
+                ballValue: ball.value,
+                zoneMultiplier: field.multiplier,
+              });
               break;
             }
           }
 
           // Draw ball (no visual changes on board)
           ctx.drawImage(
-            ballImg[ball.value-1],
+            ballImg[ball.value - 1],
             ball.x - ball.radius, // Pozycja X (przesunięta o promień w lewo)
             ball.y - ball.radius, // Pozycja Y (przesunięta o promień w górę)
             ball.radius * 2, // Szerokość (średnica)
@@ -286,6 +314,15 @@ export const PoolBoard = forwardRef<PoolBoardRef, PoolBoardProps>(
         if (onBallsInFieldChange) {
           onBallsInFieldChange(ballsInFields);
         }
+
+        // Check if balls just stopped moving
+        if (previousMovingStateRef.current && !ballsMovingRef.current) {
+          // Balls just stopped
+          if (onBallsStopped) {
+            onBallsStopped(ballsInFieldsWithData);
+          }
+        }
+        previousMovingStateRef.current = ballsMovingRef.current;
 
         // updatePhysics();
         animationFrameRef.current = requestAnimationFrame(render);

@@ -5,7 +5,7 @@ import { StartView } from "./components/startView";
 import { ballImg } from "./components/types";
 import { SaveScoreModal } from "./components/SaveScoreModal";
 
-type GamePhase = "start" | "play";
+type GamePhase = "start" | "play" | "physics" | "scoring";
 
 interface GameState {
   phase: GamePhase;
@@ -49,7 +49,11 @@ function App() {
     specialBallsTotal: 0,
   });
 
+  const prevState = useRef<GamePhase>("start");
   const [ballsInFields, setBallsInFields] = useState<number[]>([]);
+  const [ballsInFieldsData, setBallsInFieldsData] = useState<
+    Array<{ ballId: number; ballValue: number; zoneMultiplier: number }>
+  >([]);
   const [ballsMoving, setBallsMoving] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [leaderboardRefresh, setLeaderboardRefresh] = useState(0);
@@ -75,6 +79,24 @@ function App() {
       };
     });
   };
+
+  useEffect(() => {
+    if (prevState.current !== gameState.phase) {
+      console.log("Game phase changed to:", gameState.phase);
+      prevState.current = gameState.phase;
+    }
+  }, [gameState.phase]);
+
+  // Poll ball movement state
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (poolBoardRef.current) {
+        setBallsMoving(poolBoardRef.current.areBallsMoving());
+      }
+    }, 100); // Check every 100ms
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleStartGame = (ballCount: number, betAmount: number) => {
     setGameState((prev) => ({
@@ -108,10 +130,44 @@ function App() {
 
   const handleShake = (force: number) => {
     poolBoardRef.current?.shake(force);
+    console.log("SHAKE");
     setGameState((prev) => ({
       ...prev,
+      phase: "physics",
       shakes: Math.max(0, prev.shakes - 1),
     }));
+  };
+
+  const handleBallsStopped = (
+    ballsData: Array<{
+      ballId: number;
+      ballValue: number;
+      zoneMultiplier: number;
+    }>
+  ) => {
+    console.log("handleBallsStopped called with ballsData:", ballsData);
+    setBallsInFieldsData(ballsData);
+    setGameState((prev) => {
+      const newPhase = ballsData.length > 0 ? "scoring" : "play";
+      console.log("Setting phase to:", newPhase);
+      return {
+        ...prev,
+        phase: newPhase,
+      };
+    });
+  };
+
+  const handleScoringComplete = (totalEarned: number) => {
+    console.log("Scoring complete, totalEarned:", totalEarned);
+    setGameState((prev) => {
+      return {
+        ...prev,
+        phase: "play",
+        balance: prev.balance + totalEarned,
+        totalPoints: prev.totalPoints + totalEarned,
+      };
+    });
+    setBallsInFieldsData([]);
   };
 
   const resetGame = () => {
@@ -161,6 +217,8 @@ function App() {
           onShake={handleShake}
           onEndGame={handleEndGame}
           ballsMoving={ballsMoving}
+          scoringData={ballsInFieldsData}
+          onScoringComplete={handleScoringComplete}
         />
       </div>
 
@@ -176,6 +234,7 @@ function App() {
                 ballNumbers={gameState.ballNumbers}
                 onScoreChange={handleScoreUpdate}
                 onBallsInFieldChange={setBallsInFields}
+                onBallsStopped={handleBallsStopped}
               />
 
               <div className="bg-bg p-4 fixed bottom-2 rounded-r-full">
@@ -215,7 +274,7 @@ function App() {
 
       {showSaveModal && (
         <SaveScoreModal
-          finalScore={gameState.currentPointsOnBoard + gameState.totalPoints}
+          finalScore={gameState.totalPoints}
           onSave={handleSaveScore}
           onCancel={() => setShowSaveModal(false)}
         />

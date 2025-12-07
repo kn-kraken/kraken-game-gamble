@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
-import { motion, useMotionValue } from "framer-motion";
+import { motion, useMotionValue, AnimatePresence } from "framer-motion";
 import { Leaderboard } from "./Leaderboard";
 
-type GamePhase = "start" | "play";
+type GamePhase = "start" | "play" | "physics" | "scoring";
 
 interface GameState {
   phase: GamePhase;
@@ -22,6 +22,12 @@ interface SidebarProps {
   onShake: (force: number) => void;
   onEndGame: () => void;
   ballsMoving: boolean;
+  scoringData?: Array<{
+    ballId: number;
+    ballValue: number;
+    zoneMultiplier: number;
+  }>;
+  onScoringComplete?: (totalEarned: number) => void;
 }
 
 export function Sidebar({
@@ -29,11 +35,13 @@ export function Sidebar({
   onShake,
   onEndGame,
   ballsMoving,
+  scoringData = [],
+  onScoringComplete,
 }: SidebarProps) {
   const {
     ballNumbers,
     shakes,
-    currentPointsOnBoard: totalScore,
+    totalPoints,
     betAmount,
     balance,
     specialBallsUsed,
@@ -46,6 +54,29 @@ export function Sidebar({
   const animationRef = useRef<number | null>(null);
   const directionRef = useRef<1 | -1>(1); // 1 for increasing, -1 for decreasing
   const [leaderboardRefresh, setLeaderboardRefresh] = useState(0);
+
+  // Scoring animation state
+  const [currentScoringIndex, setCurrentScoringIndex] = useState(-1);
+  const [displayedBallValue, setDisplayedBallValue] = useState(0);
+  const [displayedZoneMultiplier, setDisplayedZoneMultiplier] = useState(0);
+  const [accumulatedTotal, setAccumulatedTotal] = useState(0);
+  const scoringDataRef = useRef(scoringData);
+  const onScoringCompleteRef = useRef(onScoringComplete);
+
+  console.log(
+    "Sidebar render - totalPoints:",
+    totalPoints,
+    "accumulatedTotal:",
+    accumulatedTotal,
+    "phase:",
+    gameState.phase
+  );
+
+  // Update refs when props change
+  useEffect(() => {
+    scoringDataRef.current = scoringData;
+    onScoringCompleteRef.current = onScoringComplete;
+  }, [scoringData, onScoringComplete]);
 
   // Update display value when motion value changes
   useEffect(() => {
@@ -91,7 +122,78 @@ export function Sidebar({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isHolding, ballsMoving, shakes]);
+  }, [isHolding, ballsMoving, shakes, force]);
+
+  // Scoring animation effect
+  useEffect(() => {
+    if (gameState.phase === "scoring" && scoringData.length > 0) {
+      // Start scoring animation
+      // console.log("Starting scoring animation, totalPoints:", totalPoints);
+      setCurrentScoringIndex(0);
+      setAccumulatedTotal(totalPoints);
+    } else if (gameState.phase !== "scoring") {
+      // Reset when not in scoring phase
+      setCurrentScoringIndex(-1);
+      setDisplayedBallValue(0);
+      setDisplayedZoneMultiplier(0);
+    }
+  }, [gameState.phase, scoringData.length, totalPoints]);
+
+  // Animate through each scoring ball
+  useEffect(() => {
+    console.log(
+      "Scoring ball effect - index:",
+      currentScoringIndex,
+      "data length:",
+      scoringDataRef.current.length
+    );
+    if (
+      currentScoringIndex >= 0 &&
+      currentScoringIndex < scoringDataRef.current.length
+    ) {
+      const currentData = scoringDataRef.current[currentScoringIndex];
+      console.log("Processing ball:", currentData);
+
+      // Update display values immediately
+      setDisplayedBallValue(currentData.ballValue);
+      setDisplayedZoneMultiplier(currentData.zoneMultiplier);
+
+      // Wait a bit, then add to total and move to next
+      const timeout = setTimeout(() => {
+        const earned = currentData.ballValue * currentData.zoneMultiplier;
+        setAccumulatedTotal((prev) => {
+          console.log("Adding earned:", earned, "to prev:", prev);
+          return prev + earned;
+        });
+
+        // Move to next ball or finish
+        if (currentScoringIndex + 1 < scoringDataRef.current.length) {
+          console.log("Moving to next ball");
+          setCurrentScoringIndex((prev) => prev + 1);
+        } else {
+          // Finished all balls
+          console.log("Finished all balls, calling onScoringComplete");
+          setTimeout(() => {
+            if (onScoringCompleteRef.current) {
+              const totalEarned = scoringDataRef.current.reduce(
+                (sum, data) => sum + data.ballValue * data.zoneMultiplier,
+                0
+              );
+              console.log(
+                "Calling onScoringComplete with totalEarned:",
+                totalEarned
+              );
+              onScoringCompleteRef.current(totalEarned);
+            }
+          }, 500); // Brief delay before completing
+        }
+      }, 800); // Show each ball for 800ms
+
+      return () => {
+        clearTimeout(timeout);
+      };
+    }
+  }, [currentScoringIndex]);
 
   const handleMouseDown = () => {
     console.log("MouseDown", { ballsMoving, shakes, isHolding });
@@ -157,10 +259,25 @@ export function Sidebar({
             {/* Balls */}
             <div>
               <p className="text-lg font-bold text-white mb-2">kulki</p>
-              <div className="bg-[#6bc97d] rounded-2xl px-4 py-3 text-center">
-                <span className="text-3xl font-bold text-white">
-                  {ballCount}
-                </span>
+              <div className="bg-[#6bc97d] rounded-2xl px-4 py-3 text-center overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={
+                      gameState.phase === "scoring" && displayedBallValue > 0
+                        ? `ball-${displayedBallValue}`
+                        : `count-${ballCount}`
+                    }
+                    initial={{ y: 20, opacity: 0, scale: 0.8 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ y: -20, opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="text-3xl font-bold text-white inline-block"
+                  >
+                    {gameState.phase === "scoring" && displayedBallValue > 0
+                      ? displayedBallValue
+                      : 0}
+                  </motion.span>
+                </AnimatePresence>
               </div>
             </div>
 
@@ -168,11 +285,30 @@ export function Sidebar({
               x
             </span>
 
-            {/* Shakes */}
+            {/* Zones */}
             <div>
               <p className="text-lg font-bold text-white mb-2">strefy</p>
-              <div className="bg-[#c96b6b] rounded-2xl px-4 py-3 text-center flex items-center justify-center gap-2">
-                <span className="text-3xl font-bold text-white">{0}</span>
+              <div className="bg-[#c96b6b] rounded-2xl px-4 py-3 text-center flex items-center justify-center gap-2 overflow-hidden">
+                <AnimatePresence mode="wait">
+                  <motion.span
+                    key={
+                      gameState.phase === "scoring" &&
+                      displayedZoneMultiplier > 0
+                        ? `zone-${displayedZoneMultiplier}`
+                        : "zone-0"
+                    }
+                    initial={{ y: 20, opacity: 0, scale: 0.8 }}
+                    animate={{ y: 0, opacity: 1, scale: 1 }}
+                    exit={{ y: -20, opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
+                    className="text-3xl font-bold text-white inline-block"
+                  >
+                    {gameState.phase === "scoring" &&
+                    displayedZoneMultiplier > 0
+                      ? displayedZoneMultiplier
+                      : 0}
+                  </motion.span>
+                </AnimatePresence>
               </div>
             </div>
           </div>
@@ -180,20 +316,35 @@ export function Sidebar({
       ) : null}
       {/* Score Display */}
       {gameState.phase != "start" ? (
-      <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
-        <p className="text-2xl font-bold text-white  flex-1 flex items-center justify-center">
-          wynik
-        </p>
-        <div className="bg-[#3a4a4a] flex-1 rounded-2xl px-6 py-4 text-center">
-          <span className="text-4xl font-bold text-white">{totalScore}</span>
+        <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
+          <p className="text-2xl font-bold text-white  flex-1 flex items-center justify-center">
+            wynik
+          </p>
+          <div className="bg-[#3a4a4a] flex-1 rounded-2xl px-6 py-4 text-center overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={
+                  gameState.phase === "scoring"
+                    ? `score-${accumulatedTotal}`
+                    : `total-${totalPoints}`
+                }
+                initial={{ scale: 1.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="text-4xl font-bold text-white inline-block"
+              >
+                {gameState.phase === "scoring" ? accumulatedTotal : totalPoints}
+              </motion.span>
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-      ) : 
-      <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
-        <Leaderboard refreshTrigger={leaderboardRefresh} />
-      </div>}
+      ) : (
+        <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
+          <Leaderboard refreshTrigger={leaderboardRefresh} />
+        </div>
+      )}
       {/* Balance and Bet */}
-      
+
       <div className="grid grid-cols-3 gap-3">
         {/* Balance */}
         <div className="bg-bg-side rounded-3xl flex p-3 shadow-lg col-span-2">
@@ -207,14 +358,17 @@ export function Sidebar({
 
         {/* Bet Amount */}
         {gameState.phase != "start" ? (
-        <div className="bg-bg-side rounded-3xl p-2 shadow-lg flex flex-col items-center">
-          <p className="text-2xl font-bold text-[#e87d3e] mb-2 flex-1">kurs</p>
-          <div className="bg-[#3a4a4a] rounded-2xl flex-1 px-3 py-2 w-full text-center">
-            <span className="text-2xl font-bold text-[#e87d3e]">
-              {betAmount} <span className="text-white">pk</span>
-            </span>
+          <div className="bg-bg-side rounded-3xl p-2 shadow-lg flex flex-col items-center">
+            <p className="text-2xl font-bold text-[#e87d3e] mb-2 flex-1">
+              kurs
+            </p>
+            <div className="bg-[#3a4a4a] rounded-2xl flex-1 px-3 py-2 w-full text-center">
+              <span className="text-2xl font-bold text-[#e87d3e]">
+                {betAmount} <span className="text-white">pk</span>
+              </span>
+            </div>
           </div>
-        </div>) : ( null ) }
+        ) : null}
       </div>
 
       {/* Special Balls and Moves */}
@@ -253,18 +407,20 @@ export function Sidebar({
         </div>
 
         <div className="bg-bg-side rounded-3xl p-2 shadow-lg flex flex-col items-center">
-        {gameState.phase != "start" ? (<div>
-          <p className="text-2xl font-bold text-[#e87d3e] flex-1">ruchy</p>
-          <div className="bg-[#3a4a4a] rounded-2xl flex-1  flex-end justify-center px-3 py-2 w-full text-center">
-            <div className="text-2xl font-bold text-white translate-y-[8px]">
-              {3}/<span className="text-4xl text-[#e87d3e]">{shakes}</span>
+          {gameState.phase != "start" ? (
+            <div>
+              <p className="text-2xl font-bold text-[#e87d3e] flex-1">ruchy</p>
+              <div className="bg-[#3a4a4a] rounded-2xl flex-1  flex-end justify-center px-3 py-2 w-full text-center">
+                <div className="text-2xl font-bold text-white translate-y-[8px]">
+                  {3}/<span className="text-4xl text-[#e87d3e]">{shakes}</span>
+                </div>
+              </div>
             </div>
-          </div>
-          </div>) :
-          <p className="text-2xl font-bold text-white flex-1 flex items-center justify-center">
-            edytuj
-          </p> 
-          }
+          ) : (
+            <p className="text-2xl font-bold text-white flex-1 flex items-center justify-center">
+              edytuj
+            </p>
+          )}
         </div>
       </div>
 
