@@ -435,10 +435,7 @@ export function Sidebar({
         {/* Koniec - z warunkowym blokowaniem */}
         <button
           onClick={onEndGame}
-          // disabled={shakes < 1 || ballsMoving && gameState.round == 0} // warunek blokowania
-          className={`bg-[#c96b6b] hover:bg-[#b95b5b] rounded-3xl px-4 py-6 text-center transition-colors shadow-lg ${
-            shakes < 1 || ballsMoving ? "opacity-50 cursor-not-allowed hover:bg-[#c96b6b]" : ""
-          }`}
+          className="bg-[#c96b6b] hover:bg-[#b95b5b] rounded-3xl px-4 py-6 text-center transition-colors shadow-lg"
         >
           <span className="text-xl font-bold text-white">koniec</span>
         </button>

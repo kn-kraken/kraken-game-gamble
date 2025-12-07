@@ -163,15 +163,16 @@ function App() {
       return {
         ...prev,
         phase: "play",
-        balance: prev.balance + totalEarned,
-        totalPoints: prev.totalPoints + totalEarned,
+        balance: prev.balance,
+        totalPoints: prev.totalPoints,
       };
     });
     setBallsInFieldsData([]);
   };
 
   const resetGame = () => {
-    setGameState({
+    setGameState((prev) =>
+      {return {
       phase: "start",
       ballNumbers: [],
       round: 1,
@@ -179,9 +180,10 @@ function App() {
       totalPoints: 0,
       shakes: 3,
       betAmount: 0,
-      balance: 500,
+      balance: prev.balance + prev.totalPoints,
       specialBallsUsed: 3,
       specialBallsTotal: 0,
+      };
     });
     setBallsInFields([]);
     setShowSaveModal(false);
