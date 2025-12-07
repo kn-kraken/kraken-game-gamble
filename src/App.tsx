@@ -93,7 +93,7 @@ function App() {
     setGameState((prev) => ({
       ...prev,
       phase: "start",
-      ballNumbers: generateBallNumbers(6),
+      ballNumbers: generateBallNumbers(0),
       round: 1,
       currentPointsOnBoard: 0,
       totalPoints: gameState.currentPointsOnBoard + gameState.totalPoints,

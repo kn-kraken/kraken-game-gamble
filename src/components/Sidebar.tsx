@@ -1,7 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, useMotionValue } from "framer-motion";
-import { coins } from "../utils/coins";
-import { X } from "lucide-react";
 
 type GamePhase = "start" | "play";
 
@@ -176,7 +174,7 @@ export function Sidebar({
 
       {/* Score Display */}
       <div className="bg-bg-side rounded-3xl p-4 shadow-lg flex">
-        <p className="text-2xl font-bold text-white mb-2 flex-1 self-center ">
+        <p className="text-2xl font-bold text-white  flex-1 flex items-center justify-center">
           wynik
         </p>
         <div className="bg-[#3a4a4a] flex-1 rounded-2xl px-6 py-4 text-center">
@@ -185,65 +183,68 @@ export function Sidebar({
       </div>
 
       {/* Balance and Bet */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {/* Balance */}
-        <div className="bg-bg-side rounded-3xl p-3 shadow-lg">
-          <p className="text-lg font-bold text-white mb-2">saldo</p>
-          <div className="bg-[#3a4a4a] rounded-2xl px-3 py-2 text-center">
-            <span className="text-xl font-bold text-white">{balance} pk</span>
+        <div className="bg-bg-side rounded-3xl flex p-3 shadow-lg col-span-2">
+          <p className="text-2xl font-bold text-white flex-1 flex items-center justify-center">
+            saldo
+          </p>
+          <div className="bg-[#3a4a4a] rounded-2xl flex-1 flex items-center justify-center px-3 py-2 text-center">
+            <span className="text-2xl text-white">{balance} pk</span>
           </div>
         </div>
 
         {/* Bet Amount */}
-        <div className="bg-bg-side rounded-3xl p-3 shadow-lg">
-          <p className="text-lg font-bold text-[#e87d3e] mb-2">kurs</p>
-          <div className="bg-[#3a4a4a] rounded-2xl px-3 py-2 text-center">
-            <span className="text-xl font-bold text-[#e87d3e]">
-              {betAmount} pk
+        <div className="bg-bg-side rounded-3xl p-2 shadow-lg flex flex-col items-center">
+          <p className="text-2xl font-bold text-[#e87d3e] mb-2 flex-1">kurs</p>
+          <div className="bg-[#3a4a4a] rounded-2xl flex-1 px-3 py-2 w-full text-center">
+            <span className="text-2xl font-bold text-[#e87d3e]">
+              {betAmount} <span className="text-white">pk</span>
             </span>
           </div>
         </div>
       </div>
 
       {/* Special Balls and Moves */}
-      <div className="bg-bg-side rounded-3xl p-4 shadow-lg">
-        <div className="grid grid-cols-2 gap-3">
+
+      {/* <div className="bg-bg-side rounded-3xl p-4 shadow-lg"> */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-bg-side rounded-3xl p-4 shadow-lg col-span-2">
           {/* Special Balls */}
           <div>
-            <p className="text-lg font-bold text-white mb-2">specjalne</p>
-            <div className="flex items-center gap-1 mb-2">
-              {/* Purple Ball */}
-              <div className="w-10 h-10 rounded-full bg-[#9b59b6] flex items-center justify-center border-4 border-dashed border-white shadow-lg">
-                <span className="text-white font-bold text-lg">×</span>
-              </div>
-              {/* Green Ball */}
-              <div className="w-10 h-10 rounded-full bg-[#6bc97d] flex items-center justify-center border-4 border-dashed border-white shadow-lg">
-                <span className="text-white font-bold text-lg">?</span>
-              </div>
-              {/* Blue Ball */}
-              <div className="w-10 h-10 rounded-full bg-[#5fa8d3] flex items-center justify-center border-4 border-dashed border-white shadow-lg">
-                <span className="text-white font-bold text-lg">○</span>
-              </div>
+            <p className="font-bold text-white mb-2 text-2xl">specjalne</p>
+            <div className="flex items-center gap-1">
+              <img
+                src="/imgs/special/purple.png"
+                alt="Special Ball purple"
+                className="w-16 h-16 -ml-4"
+              />
+              <img
+                src="/imgs/special/green.png"
+                alt="Special Ball green"
+                className="w-16 h-16 -ml-4"
+              />
+              <img
+                src="/imgs/special/blue.png"
+                alt="Special Ball blue"
+                className="w-16 h-16 -ml-4"
+              />
               {/* Counter */}
-              <span className="text-xl font-bold text-white ml-1">
-                {specialBallsUsed}/{specialBallsTotal}
+              <span className="text-2xl font-bold text-white ml-auto translate-y-2">
+                {specialBallsUsed}/
+                <span className="text-4xl text-[#e87d3e]">
+                  {specialBallsTotal}
+                </span>
               </span>
             </div>
           </div>
-          {/* Moves */}
-          <div>
-            <p className="text-lg font-bold text-white mb-2">ruchy</p>
-            <div className="flex items-center gap-1">
-              <div className="flex gap-1">
-                {Array.from({ length: gameState.shakes }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-6 h-10 rounded ${
-                      i < gameState.shakes ? "bg-[#e87d3e]" : "bg-[#6bc97d]"
-                    }`}
-                  />
-                ))}
-              </div>
+        </div>
+
+        <div className="bg-bg-side rounded-3xl p-2 shadow-lg flex flex-col items-center">
+          <p className="text-2xl font-bold text-[#e87d3e] flex-1">ruchy</p>
+          <div className="bg-[#3a4a4a] rounded-2xl flex-1  flex-end justify-center px-3 py-2 w-full text-center">
+            <div className="text-2xl font-bold text-white translate-y-[8px]">
+              {3}/<span className="text-4xl text-[#e87d3e]">{shakes}</span>
             </div>
           </div>
         </div>
